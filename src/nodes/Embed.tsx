@@ -1,15 +1,16 @@
-import * as React from "react";
-import Node from "./Node";
+import * as React from 'react'
+import Node from './Node'
+import { TokenConfig } from 'prosemirror-markdown'
 
 export default class Embed extends Node {
   get name() {
-    return "embed";
+    return 'embed'
   }
 
   get schema() {
     return {
-      content: "inline*",
-      group: "block",
+      content: 'inline*',
+      group: 'block',
       atom: true,
       attrs: {
         href: {},
@@ -18,38 +19,38 @@ export default class Embed extends Node {
       },
       parseDOM: [
         {
-          tag: "iframe",
+          tag: 'iframe',
           getAttrs: (dom: HTMLIFrameElement) => {
-            const { embeds } = this.editor.props;
-            const href = dom.getAttribute("src") || "";
+            const { embeds } = this.editor.props
+            const href = dom.getAttribute('src') || ''
 
             if (embeds) {
               for (const embed of embeds) {
-                const matches = embed.matcher(href);
+                const matches = embed.matcher(href)
                 if (matches) {
                   return {
                     href,
                     component: embed.component,
                     matches,
-                  };
+                  }
                 }
               }
             }
 
-            return {};
+            return {}
           },
         },
       ],
       toDOM: node => [
-        "iframe",
+        'iframe',
         { src: node.attrs.href, contentEditable: false },
         0,
       ],
-    };
+    }
   }
 
   component({ isEditable, isSelected, theme, node }) {
-    const Component = node.attrs.component;
+    const Component = node.attrs.component
 
     return (
       <Component
@@ -58,34 +59,34 @@ export default class Embed extends Node {
         isSelected={isSelected}
         theme={theme}
       />
-    );
+    )
   }
 
   commands({ type }) {
     return attrs => (state, dispatch) => {
       dispatch(
         state.tr.replaceSelectionWith(type.create(attrs)).scrollIntoView()
-      );
-      return true;
-    };
+      )
+      return true
+    }
   }
 
   toMarkdown(state, node) {
-    state.ensureNewLine();
+    state.ensureNewLine()
     state.write(
-      "[" + state.esc(node.attrs.href) + "](" + state.esc(node.attrs.href) + ")"
-    );
-    state.write("\n\n");
+      '[' + state.esc(node.attrs.href) + '](' + state.esc(node.attrs.href) + ')'
+    )
+    state.write('\n\n')
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
-      node: "embed",
+      node: 'embed',
       getAttrs: token => ({
-        href: token.attrGet("href"),
-        matches: token.attrGet("matches"),
-        component: token.attrGet("component"),
+        href: token.attrGet('href'),
+        matches: token.attrGet('matches'),
+        component: token.attrGet('component'),
       }),
-    };
+    }
   }
 }

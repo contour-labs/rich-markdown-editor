@@ -1,22 +1,23 @@
-import Node from "./Node";
+import Node from './Node'
+import { TokenConfig } from 'prosemirror-markdown'
 
 export default class TableRow extends Node {
   get name() {
-    return "tr";
+    return 'tr'
   }
 
   get schema() {
     return {
-      content: "(th | td)*",
-      tableRole: "row",
-      parseDOM: [{ tag: "tr" }],
+      content: '(th | td)*',
+      tableRole: 'row',
+      parseDOM: [{ tag: 'tr' }],
       toDOM() {
-        return ["tr", 0];
+        return ['tr', 0]
       },
-    };
+    }
   }
 
-  parseMarkdown() {
-    return { block: "tr" };
+  parseMarkdown(): TokenConfig {
+    return { block: 'tr' }
   }
 }

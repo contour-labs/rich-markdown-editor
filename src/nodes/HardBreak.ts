@@ -1,45 +1,46 @@
-import Node from "./Node";
-import { isInTable } from "prosemirror-tables";
+import Node from './Node'
+import { isInTable } from 'prosemirror-tables'
+import { TokenConfig } from 'prosemirror-markdown'
 
 export default class HardBreak extends Node {
   get name() {
-    return "br";
+    return 'br'
   }
 
   get schema() {
     return {
       inline: true,
-      group: "inline",
+      group: 'inline',
       selectable: false,
-      parseDOM: [{ tag: "br" }],
+      parseDOM: [{ tag: 'br' }],
       toDOM() {
-        return ["br"];
+        return ['br']
       },
-    };
+    }
   }
 
   commands({ type }) {
     return () => (state, dispatch) => {
-      dispatch(state.tr.replaceSelectionWith(type.create()).scrollIntoView());
-      return true;
-    };
+      dispatch(state.tr.replaceSelectionWith(type.create()).scrollIntoView())
+      return true
+    }
   }
 
   keys({ type }) {
     return {
-      "Shift-Enter": (state, dispatch) => {
-        if (!isInTable(state)) return false;
-        dispatch(state.tr.replaceSelectionWith(type.create()).scrollIntoView());
-        return true;
+      'Shift-Enter': (state, dispatch) => {
+        if (!isInTable(state)) return false
+        dispatch(state.tr.replaceSelectionWith(type.create()).scrollIntoView())
+        return true
       },
-    };
+    }
   }
 
   toMarkdown(state) {
-    state.write(" \\n ");
+    state.write(' \\n ')
   }
 
-  parseMarkdown() {
-    return { node: "br" };
+  parseMarkdown(): TokenConfig {
+    return { node: 'br' }
   }
 }

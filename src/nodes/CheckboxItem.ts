@@ -2,12 +2,13 @@ import {
   splitListItem,
   sinkListItem,
   liftListItem,
-} from "prosemirror-schema-list";
-import Node from "./Node";
+} from 'prosemirror-schema-list'
+import Node from './Node'
+import { TokenConfig } from 'prosemirror-markdown'
 
 export default class CheckboxItem extends Node {
   get name() {
-    return "checkbox_item";
+    return 'checkbox_item'
   }
 
   get schema() {
@@ -17,80 +18,80 @@ export default class CheckboxItem extends Node {
           default: false,
         },
       },
-      content: "paragraph block*",
+      content: 'paragraph block*',
       defining: true,
       draggable: false,
       parseDOM: [
         {
           tag: `li[data-type="${this.name}"]`,
           getAttrs: (dom: HTMLLIElement) => ({
-            checked: dom.className.includes("checked"),
+            checked: dom.className.includes('checked'),
           }),
         },
       ],
       toDOM: node => {
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.addEventListener("change", this.handleChange);
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        input.addEventListener('change', this.handleChange)
 
         if (node.attrs.checked) {
-          input.checked = true;
+          input.checked = true
         }
 
         return [
-          "li",
+          'li',
           {
-            "data-type": this.name,
-            class: node.attrs.checked ? "checked" : undefined,
+            'data-type': this.name,
+            class: node.attrs.checked ? 'checked' : undefined,
           },
           [
-            "span",
+            'span',
             {
               contentEditable: false,
             },
             input,
           ],
-          ["div", 0],
-        ];
+          ['div', 0],
+        ]
       },
-    };
+    }
   }
 
   handleChange = event => {
-    const { view } = this.editor;
-    const { tr } = view.state;
-    const { top, left } = event.target.getBoundingClientRect();
-    const result = view.posAtCoords({ top, left });
+    const { view } = this.editor
+    const { tr } = view.state
+    const { top, left } = event.target.getBoundingClientRect()
+    const result = view.posAtCoords({ top, left })
 
     if (result) {
       const transaction = tr.setNodeMarkup(result.inside, undefined, {
         checked: event.target.checked,
-      });
-      view.dispatch(transaction);
+      })
+      view.dispatch(transaction)
     }
-  };
+  }
 
   keys({ type }) {
     return {
       Enter: splitListItem(type),
       Tab: sinkListItem(type),
-      "Shift-Tab": liftListItem(type),
-      "Mod-]": sinkListItem(type),
-      "Mod-[": liftListItem(type),
-    };
+      'Shift-Tab': liftListItem(type),
+      'Mod-]': sinkListItem(type),
+      'Mod-[': liftListItem(type),
+    }
   }
 
   toMarkdown(state, node) {
-    state.write(node.attrs.checked ? "[x] " : "[ ] ");
-    state.renderContent(node);
+    state.write(node.attrs.checked ? '[x] ' : '[ ] ')
+    state.renderContent(node)
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
-      block: "checkbox_item",
+      block: 'checkbox_item',
       getAttrs: tok => ({
-        checked: tok.attrGet("checked") ? true : undefined,
+        checked: tok.attrGet('checked') ? true : undefined,
       }),
-    };
+    }
   }
 }

@@ -1,26 +1,28 @@
-import { toggleMark } from "prosemirror-commands";
-import Extension from "../lib/Extension";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toggleMark } from 'prosemirror-commands'
+import Extension from '../lib/Extension'
+import { Schema, MarkType } from 'prosemirror-model'
+import { TokenConfig } from 'prosemirror-markdown'
 
 export default abstract class Mark extends Extension {
-  get type() {
-    return "mark";
+  get type(): string {
+    return 'mark'
   }
 
-  abstract get schema();
+  abstract get schema(): Schema
 
   get markdownToken(): string {
-    return "";
+    return ''
   }
 
   get toMarkdown(): Record<string, any> {
-    return {};
+    return {}
   }
 
-  parseMarkdown() {
-    return {};
-  }
+  abstract parseMarkdown(): TokenConfig
 
-  commands({ type }) {
-    return () => toggleMark(type);
+  commands({ type }: { type: MarkType }) {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    return () => toggleMark(type)
   }
 }

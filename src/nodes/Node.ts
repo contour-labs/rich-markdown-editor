@@ -1,23 +1,24 @@
-import { MarkdownSerializerState } from "prosemirror-markdown";
-import { Node as ProsemirrorNode } from "prosemirror-model";
-import Extension from "../lib/Extension";
+import { MarkdownSerializerState, TokenConfig } from 'prosemirror-markdown'
+import { Node as ProsemirrorNode } from 'prosemirror-model'
+import Extension from '../lib/Extension'
 
 export default abstract class Node extends Extension {
-  get type() {
-    return "node";
+  get type(): string {
+    return 'node'
   }
 
-  abstract get schema();
+  abstract get schema(): any
 
   get markdownToken(): string {
-    return "";
+    return ''
   }
 
-  toMarkdown(state: MarkdownSerializerState, node: ProsemirrorNode) {
-    console.error("toMarkdown not implemented", state, node);
-  }
+  abstract toMarkdown(
+    state: MarkdownSerializerState,
+    node: ProsemirrorNode
+  ): void
 
-  parseMarkdown() {
-    return;
+  parseMarkdown(): TokenConfig | undefined {
+    return undefined
   }
 }

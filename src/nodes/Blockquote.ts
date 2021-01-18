@@ -1,42 +1,43 @@
-import { wrappingInputRule } from "prosemirror-inputrules";
-import Node from "./Node";
-import toggleWrap from "../commands/toggleWrap";
+import { wrappingInputRule } from 'prosemirror-inputrules'
+import Node from './Node'
+import toggleWrap from '../commands/toggleWrap'
+import { TokenConfig } from 'prosemirror-markdown'
 
 export default class Blockquote extends Node {
   get name() {
-    return "blockquote";
+    return 'blockquote'
   }
 
   get schema() {
     return {
-      content: "block+",
-      group: "block",
+      content: 'block+',
+      group: 'block',
       defining: true,
-      parseDOM: [{ tag: "blockquote" }],
-      toDOM: () => ["blockquote", 0],
-    };
+      parseDOM: [{ tag: 'blockquote' }],
+      toDOM: () => ['blockquote', 0],
+    }
   }
 
   inputRules({ type }) {
-    return [wrappingInputRule(/^\s*>\s$/, type)];
+    return [wrappingInputRule(/^\s*>\s$/, type)]
   }
 
   commands({ type }) {
-    return () => toggleWrap(type);
+    return () => toggleWrap(type)
   }
 
   keys({ type }) {
     return {
-      "Ctrl->": toggleWrap(type),
-      "Mod-]": toggleWrap(type),
-    };
+      'Ctrl->': toggleWrap(type),
+      'Mod-]': toggleWrap(type),
+    }
   }
 
   toMarkdown(state, node) {
-    state.wrapBlock("> ", null, node, () => state.renderContent(node));
+    state.wrapBlock('> ', null, node, () => state.renderContent(node))
   }
 
-  parseMarkdown() {
-    return { block: "blockquote" };
+  parseMarkdown(): TokenConfig {
+    return { block: 'blockquote' }
   }
 }
