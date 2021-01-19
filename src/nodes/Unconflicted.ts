@@ -12,7 +12,7 @@ export default class Unconflicted extends NodeWithNodeView {
 
   get schema(): NodeSpec {
     return {
-      content: "inline*",
+      content: "block*",
       group: "block",
       attrs: {
         originalConflict: {
