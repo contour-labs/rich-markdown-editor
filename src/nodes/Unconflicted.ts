@@ -38,12 +38,15 @@ export default class Unconflicted extends NodeWithNodeView {
 
       if (originalConflict && typeof getPos === "function") {
         dom.title = "Unresolve"
+        const { backgroundLight: active } = mergeSectionThemes[chosenIdentity]
+        const passive = active + "66"
         dom.addEventListener("pointerenter", () => {
-          dom.style.background = mergeSectionThemes[chosenIdentity].backgroundLight
+          dom.style.background = active
         })
         dom.addEventListener("pointerleave", () => {
-          dom.style.background = "white"
+          dom.style.background = passive
         })
+        dom.style.background = passive
         dom.style.transition = "300ms ease all"
         dom.style.cursor = "pointer"
         dom.addEventListener("click", () => {
