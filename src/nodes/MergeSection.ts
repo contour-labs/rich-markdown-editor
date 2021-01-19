@@ -1,4 +1,4 @@
-import { NodeSpec } from "prosemirror-model";
+import { NodeSpec, Fragment, Node } from "prosemirror-model";
 import NodeWithNodeView from "./NodeWithNodeView";
 import { NodeView } from "prosemirror-view";
 import { NodeViewConstructor } from "..";
@@ -28,8 +28,7 @@ export default class MergeSection extends NodeWithNodeView {
 
   get nodeViewConstructor(): NodeViewConstructor {
     return (node, view): NodeView => {
-      console.log("CALLED!", node.attrs)
-      const { identity, selected } = node.attrs
+      const { identity } = node.attrs
 
       const dom = document.createElement('div')
       dom.style.display = 'flex'
@@ -37,12 +36,6 @@ export default class MergeSection extends NodeWithNodeView {
 
       const contentDOM = document.createElement('div')
       contentDOM.style.flex = '1'
-
-      if (selected) {
-        dom.appendChild(contentDOM)
-        return { dom, contentDOM }
-      }
-
       contentDOM.style.padding = "5px 10px"
       contentDOM.style.background = identity === ConflictIdentity.CURRENT ? "#dcfce6" : "#e0e7ff"
 
@@ -54,27 +47,28 @@ export default class MergeSection extends NodeWithNodeView {
         return p
       }
 
-      const labelledMargin = blankConflictSegment()
-
-      const handler = () => {
-        labelledMargin.remove()
-        contentDOM.style.background = "white"
-        contentDOM.style.padding = "0"
-        node.attrs.selected = true
-        view.state.doc.descendants((nodeCandidate, pos) => {
-          const { type, attrs } = nodeCandidate
+      const handler = (generateUnconflicted: (self: Node, parent: Node) => Node) => {
+        view.state.doc.descendants((parentCandidate, pos) => {
+          const { type, attrs } = parentCandidate
           if (type.name === "merge_conflict" && attrs.conflictId === node.attrs.conflictId) {
-            view.dispatch(view.state.tr.replaceRangeWith(pos, pos + nodeCandidate.nodeSize, node))
+            const conflicted = generateUnconflicted(node, parentCandidate)
+            view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, conflicted))
           }
         })
       }
+
+      const blankUnconflicted = (content?: Fragment): Node => {
+        return view.state.schema.nodes.unconflicted.create({}, content)
+      }
+
+      const labelledMargin = blankConflictSegment()
+      labelledMargin.addEventListener("click", () => handler(self => blankUnconflicted(self.content)))
 
       if (identity === ConflictIdentity.CURRENT) {
         // Initialize and render the opening "<<<<<<<" panel
         labelledMargin.textContent = "<<<<<<< HEAD"
         labelledMargin.style.color = "#17a34a"
         labelledMargin.style.background = "#baf7d0"
-        labelledMargin.addEventListener("click", handler)
         dom.appendChild(labelledMargin)
         // Then, render the markdown child content
         dom.appendChild(contentDOM)
@@ -84,12 +78,11 @@ export default class MergeSection extends NodeWithNodeView {
         separator.textContent = "======="
         separator.style.color = "#eab305"
         separator.style.background = "#fefce8"
-        labelledMargin.addEventListener("click", () => {
-          separator.remove()
-          handler()
-        })
         separator.addEventListener("click", () => {
-          console.log("You've chosen to resolve both. Come back later...")
+          handler((self, parent) => blankUnconflicted(Fragment.fromArray([
+            blankUnconflicted(parent.firstChild?.content),
+            blankUnconflicted(self.content),
+          ])))
         })
         dom.appendChild(separator)
         // Then, render the markdown child content
