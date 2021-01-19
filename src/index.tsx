@@ -353,10 +353,14 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   }
 
   createDocument(content: string) {
+    const conflicts = parseConflicts(content)
+    if (conflicts === false) {
+      return this.parser.parse(content)
+    }
     let conflictId = 0
     return this.schema.nodes.doc.create(
       {},
-      Fragment.fromArray(parseConflicts(content).map(portion => {
+      Fragment.fromArray(conflicts.map(portion => {
         if (typeof portion === "string") {
           return this.schema.nodes.unconflicted.create(
             {},

@@ -14,7 +14,7 @@ export interface MergeConflict {
   tail: string
 }
 
-export const parseConflicts = (fileContents: string): (MergeConflict | string)[] => {
+export const parseConflicts = (fileContents: string): (MergeConflict | string)[] | false => {
   const conflictSeeker = /<<<<<<< HEAD\n([\s\S]+?(?=\n=======))\n=======\n([\s\S]+?(?=\n>>>>>>> [a-z0-9]+\n))(\n>>>>>>> [a-z0-9]+\n)/g
   const conflicts: (MergeConflict | string)[] = []
   let matches: RegExpExecArray | null;
@@ -29,7 +29,7 @@ export const parseConflicts = (fileContents: string): (MergeConflict | string)[]
   if (conflicts.length) {
     conflicts.push(fileContents.slice((conflicts[conflicts.length - 1] as MergeConflict).endIndex))
   } else {
-    conflicts.push(fileContents)
+    return false
   }
 
   return conflicts
