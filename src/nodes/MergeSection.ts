@@ -30,7 +30,7 @@ export default class MergeSection extends NodeWithNodeView {
 
   get schema(): NodeSpec {
     return {
-      content: "inline*",
+      content: "block*",
       group: "block",
       attrs: {
         identity: {

@@ -17,7 +17,7 @@ export default class MergeConflict extends NodeWithNodeView {
 
   get schema(): NodeSpec {
     return {
-      content: "(inline | text)*",
+      content: "block*",
       group: "block",
       attrs: {
         conflictId: {
