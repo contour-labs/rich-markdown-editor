@@ -4,9 +4,6 @@ import checkboxPlugin from "./checkboxes";
 import embedsPlugin from "./embeds";
 import breakPlugin from "./breaks";
 import tablesPlugin from "./tables";
-import iterator from "markdown-it-for-inline"
-import Token from "markdown-it/lib/token";
-import mergeConflictPlugin from "./mergeConflictPlugin";
 
 export default function rules({ embeds }) {
   return markdownit("default", {

@@ -10,7 +10,6 @@ import toggleBlockType from "../commands/toggleBlockType";
 import headingToSlug from "../lib/headingToSlug";
 import Node from "./Node";
 import Token from "markdown-it/lib/token";
-import { conflictColors } from "../lib/markdown/mergeConflictPlugin";
 
 export default class Heading extends Node {
   get name() {
@@ -28,12 +27,6 @@ export default class Heading extends Node {
       attrs: {
         level: {
           default: 1,
-        },
-        conflictId: {
-          default: undefined
-        },
-        conflictIdentity: {
-          default: undefined
         },
       },
       content: "inline*",
@@ -53,13 +46,8 @@ export default class Heading extends Node {
         button.className = "heading-anchor";
         button.addEventListener("click", this.handleCopyLink());
 
-        const attrs: { [attr: string]: string } = {}
-        if (conflictIdentity) {
-          attrs.style = `background: ${conflictColors.get(conflictIdentity)};`
-        }
         return [
           `h${level + (this.options.offset || 0)}`,
-          attrs,
           button,
           ["span", 0],
         ];
@@ -78,8 +66,6 @@ export default class Heading extends Node {
       block: "heading",
       getAttrs: (token: Token): Record<string, any> => ({
         level: +token.tag.slice(1),
-        conflictId: token.attrGet("conflictId"),
-        conflictIdentity: token.attrGet("conflictIdentity"),
       }),
     } as TokenConfig;
   }

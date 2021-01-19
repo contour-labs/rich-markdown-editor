@@ -2,7 +2,6 @@ import { setBlockType } from "prosemirror-commands";
 import Node from "./Node";
 import { NodeSpec } from "prosemirror-model";
 import { TokenConfig } from "prosemirror-markdown";
-import { conflictColors } from "../lib/markdown/mergeConflictPlugin";
 
 export default class Paragraph extends Node {
   get name() {
@@ -13,22 +12,9 @@ export default class Paragraph extends Node {
     return {
       content: "inline*",
       group: "block",
-      attrs: {
-        conflictId: {
-          default: undefined
-        },
-        conflictIdentity: {
-          default: undefined
-        },
-      },
       parseDOM: [{ tag: "p" }],
       toDOM(node) {
-        const { conflictIdentity } = node.attrs
-        const attrs: { [attr: string]: string } = {}
-        if (conflictIdentity) {
-          attrs.style = `background: ${conflictColors.get(conflictIdentity)};`
-        }
-        return ["p", attrs, 0];
+        return ["p", 0];
       },
     };
   }
@@ -59,12 +45,6 @@ export default class Paragraph extends Node {
   }
 
   parseMarkdown(): TokenConfig {
-    return {
-      block: "paragraph",
-      getAttrs: token => ({
-        conflictId: token.attrGet("conflictId"),
-        conflictIdentity: token.attrGet("conflictIdentity")
-      })
-    };
+    return { block: "paragraph" }
   }
 }

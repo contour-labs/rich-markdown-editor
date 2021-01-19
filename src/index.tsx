@@ -21,11 +21,10 @@ import LinkToolbar from "./components/LinkToolbar";
 import Tooltip from "./components/Tooltip";
 import Extension from "./lib/Extension";
 import ExtensionManager from "./lib/ExtensionManager";
-import ComponentView from "./lib/ComponentView";
 import headingToSlug from "./lib/headingToSlug";
 
 // nodes
-import ReactNode from "./nodes/ReactNode";
+import NodeWithNodeView from "./nodes/NodeWithNodeView";
 import Doc from "./nodes/Doc";
 import Text from "./nodes/Text";
 import Blockquote from "./nodes/Blockquote";
@@ -63,9 +62,8 @@ import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
 import { parseConflicts } from "./lib/merge_core";
-import MergeConflict from "./nodes/MergeConflict";
+import MergeConflict, { ConflictIdentity } from "./nodes/MergeConflict";
 import MergeSection from "./nodes/MergeSection";
-import { ConflictIdentity } from "./lib/markdown/mergeConflictPlugin";
 import Unconflicted from "./nodes/Unconflicted";
 
 export { schema, parser, serializer } from "./server";
@@ -109,7 +107,7 @@ type State = {
   blockMenuSearch: string;
 };
 
-type NodeViewConstructor = (
+export type NodeViewConstructor = (
   node: ProsemirrorNode,
   view: EditorView,
   getPos: (() => number) | boolean,
@@ -192,7 +190,6 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     this.nodes = this.createNodes();
     this.marks = this.createMarks();
     this.schema = this.createSchema();
-    console.log(this.schema)
     this.plugins = this.createPlugins();
     this.keymaps = this.createKeymaps();
     this.serializer = this.createSerializer();
@@ -298,27 +295,11 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
 
   createNodeViews(): { [name: string]: NodeViewConstructor } {
     return this.extensions.extensions
-      .filter((extension: Extension) => {
-        return (extension as any).component !== undefined
-      })
-      .reduce((nodeViews, extension) => {
-        const nodeViewConstructor: NodeViewConstructor = (node, view, getPos, decorations) => {
-          const dom = document.createElement('div')
-          dom.style.display = 'flex'
-
-          const contentDOM = document.createElement('div')
-          contentDOM.style.flex = '1'
-          contentDOM.addEventListener("click", () => console.log("AYYYYYY"))
-          dom.appendChild(contentDOM)
-
-
-          return { dom, contentDOM }
-        };
-
-        return {
-          ...nodeViews,
-          [extension.name]: nodeViewConstructor,
-        };
+      .reduce((nodeViewConstructors, extension) => {
+        if (extension instanceof NodeWithNodeView) {
+          nodeViewConstructors[extension.name] = extension.nodeViewConstructor
+        }
+        return nodeViewConstructors
       }, {} as { [name: string]: NodeViewConstructor });
   }
 
@@ -355,14 +336,9 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   }
 
   createState(value?: string) {
-    const doc = this.createDocument(value || this.props.defaultValue);
-
-
-    console.log(doc)
-
     return EditorState.create({
       schema: this.schema,
-      doc,
+      doc: this.createDocument(value || this.props.defaultValue),
       plugins: [
         ...this.plugins,
         ...this.keymaps,
@@ -377,31 +353,37 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   }
 
   createDocument(content: string) {
+    let conflictId = 0
     return this.schema.nodes.doc.create(
       {},
       Fragment.fromArray(parseConflicts(content).map(portion => {
-        console.log(portion)
         if (typeof portion === "string") {
-          const unconflicted = this.schema.nodes.unconflicted.create(
+          return this.schema.nodes.unconflicted.create(
             {},
             this.parser.parse(portion).content
           )
-          console.log("HEY!", unconflicted)
-          return unconflicted
         } else {
-          return this.schema.nodes.merge_conflict.create(
-            {},
+          const mergeConflict = this.schema.nodes.merge_conflict.create(
+            { conflictId },
             Fragment.fromArray([
               this.schema.nodes.merge_section.create(
-                { identity: ConflictIdentity.CURRENT },
+                {
+                  identity: ConflictIdentity.CURRENT,
+                  conflictId
+                },
                 this.parser.parse(portion.mine).content
               ),
               this.schema.nodes.merge_section.create(
-                { identity: ConflictIdentity.INCOMING },
+                {
+                  identity: ConflictIdentity.INCOMING,
+                  conflictId
+                },
                 this.parser.parse(portion.theirs).content
               )
             ])
           )
+          conflictId += 1
+          return mergeConflict
         }
       }))
     )
