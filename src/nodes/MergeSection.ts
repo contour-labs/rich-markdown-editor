@@ -3,7 +3,24 @@ import NodeWithNodeView from "./NodeWithNodeView";
 import { NodeView } from "prosemirror-view";
 import { NodeViewConstructor } from "..";
 import { ConflictIdentity } from "./MergeConflict";
-import { NodeSelection } from "prosemirror-state";
+
+export const mergeSectionThemes = {
+  [ConflictIdentity.CURRENT]: {
+    color: "#17a34a",
+    backgroundLight: "#dcfce6",
+    backgroundDark: "#baf7d0",
+  },
+  [ConflictIdentity.INCOMING]: {
+    color: "#4e46e4",
+    backgroundLight: "#e0e7ff",
+    backgroundDark: "#c6d2fe",
+  },
+  [ConflictIdentity.BOTH]: {
+    color: "#eab305",
+    backgroundLight: "#fefce8",
+    backgroundDark: "#fefce8",
+  }
+}
 
 export default class MergeSection extends NodeWithNodeView {
 
@@ -37,7 +54,7 @@ export default class MergeSection extends NodeWithNodeView {
       const contentDOM = document.createElement('div')
       contentDOM.style.flex = '1'
       contentDOM.style.padding = "5px 10px"
-      contentDOM.style.background = identity === ConflictIdentity.CURRENT ? "#dcfce6" : "#e0e7ff"
+      contentDOM.style.background = mergeSectionThemes[identity].backgroundLight
 
       const blankConflictSegment = () => {
         const p = document.createElement("p")
@@ -57,18 +74,23 @@ export default class MergeSection extends NodeWithNodeView {
         })
       }
 
-      const blankUnconflicted = (content?: Fragment): Node => {
-        return view.state.schema.nodes.unconflicted.create({}, content)
+      const blankUnconflicted = (content: Fragment | undefined, conflictInfo: { originalConflict: Node, chosenIdentity: ConflictIdentity } | undefined): Node => {
+        return view.state.schema.nodes.unconflicted.create(conflictInfo, content)
       }
 
       const labelledMargin = blankConflictSegment()
-      labelledMargin.addEventListener("click", () => handler(self => blankUnconflicted(self.content)))
+      labelledMargin.title = `Accept ${identity}`
+      labelledMargin.addEventListener("click", () => handler((self, parent) => {
+        const attrs = { originalConflict: parent, chosenIdentity: identity }
+        return blankUnconflicted(self.content, attrs)
+      }))
 
       if (identity === ConflictIdentity.CURRENT) {
         // Initialize and render the opening "<<<<<<<" panel
         labelledMargin.textContent = "<<<<<<< HEAD"
-        labelledMargin.style.color = "#17a34a"
-        labelledMargin.style.background = "#baf7d0"
+        const currentTheme = mergeSectionThemes[ConflictIdentity.CURRENT]
+        labelledMargin.style.color = currentTheme.color
+        labelledMargin.style.background = currentTheme.backgroundDark
         dom.appendChild(labelledMargin)
         // Then, render the markdown child content
         dom.appendChild(contentDOM)
@@ -76,21 +98,27 @@ export default class MergeSection extends NodeWithNodeView {
         // Initialize and render the middle "=======" panel
         const separator = blankConflictSegment()
         separator.textContent = "======="
-        separator.style.color = "#eab305"
-        separator.style.background = "#fefce8"
+        const bothTheme = mergeSectionThemes[ConflictIdentity.BOTH]
+        separator.style.color = bothTheme.color
+        separator.style.background = bothTheme.backgroundDark
+        separator.title = "Accept Both"
         separator.addEventListener("click", () => {
-          handler((self, parent) => blankUnconflicted(Fragment.fromArray([
-            blankUnconflicted(parent.firstChild?.content),
-            blankUnconflicted(self.content),
-          ])))
+          handler((self, parent) => {
+            const attrs = { originalConflict: parent, chosenIdentity: ConflictIdentity.BOTH }
+            return blankUnconflicted(Fragment.fromArray([
+              blankUnconflicted(parent.firstChild?.content, undefined),
+              blankUnconflicted(self.content, undefined),
+            ]), attrs)
+          })
         })
         dom.appendChild(separator)
         // Then, render the markdown child content
         dom.appendChild(contentDOM)
         // Finally, initialize and render the trailing ">>>>>>>" panel
         labelledMargin.textContent = ">>>>>>>"
-        labelledMargin.style.color = "#4e46e4"
-        labelledMargin.style.background = "#c6d2fe"
+        const incomingTheme = mergeSectionThemes[ConflictIdentity.INCOMING]
+        labelledMargin.style.color = incomingTheme.color
+        labelledMargin.style.background = incomingTheme.backgroundDark
         dom.appendChild(labelledMargin)
       }
 

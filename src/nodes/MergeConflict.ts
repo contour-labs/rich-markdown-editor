@@ -4,8 +4,9 @@ import { NodeViewConstructor } from "../index"
 import { NodeView } from "prosemirror-view";
 
 export enum ConflictIdentity {
-  CURRENT = "current",
-  INCOMING = "incoming"
+  CURRENT = "Current",
+  INCOMING = "Incoming",
+  BOTH = "Both"
 }
 
 export default class MergeConflict extends NodeWithNodeView {
