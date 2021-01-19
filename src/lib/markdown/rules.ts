@@ -13,14 +13,9 @@ export default function rules({ embeds }) {
     breaks: false,
     html: false,
   })
-    // .use(iterator, 'logger', 'text', function (tokens: Token[], idx: number) {
-    //   const currentToken = tokens[idx]
-    //   console.log(tokens, idx, currentToken.content)
-    // })
     .use(embedsPlugin(embeds))
     .use(breakPlugin)
     .use(checkboxPlugin)
     .use(markPlugin)
     .use(tablesPlugin)
-    .use(mergeConflictPlugin)
 }

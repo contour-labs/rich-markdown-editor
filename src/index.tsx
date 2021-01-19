@@ -4,8 +4,8 @@ import { EditorState, Selection, Plugin } from "prosemirror-state";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
-import { EditorView } from "prosemirror-view";
-import { Schema, NodeSpec, MarkSpec } from "prosemirror-model";
+import { EditorView, Decoration, NodeView } from "prosemirror-view";
+import { Schema, NodeSpec, MarkSpec, Node as ProsemirrorNode, Slice, Fragment } from "prosemirror-model";
 import { inputRules, InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
 import { baseKeymap } from "prosemirror-commands";
@@ -62,6 +62,11 @@ import Placeholder from "./plugins/Placeholder";
 import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
+import { parseConflicts } from "./lib/merge_core";
+import MergeConflict from "./nodes/MergeConflict";
+import MergeSection from "./nodes/MergeSection";
+import { ConflictIdentity } from "./lib/markdown/mergeConflictPlugin";
+import Unconflicted from "./nodes/Unconflicted";
 
 export { schema, parser, serializer } from "./server";
 
@@ -104,6 +109,13 @@ type State = {
   blockMenuSearch: string;
 };
 
+type NodeViewConstructor = (
+  node: ProsemirrorNode,
+  view: EditorView,
+  getPos: (() => number) | boolean,
+  decorations: Decoration[]
+) => NodeView
+
 class RichMarkdownEditor extends React.PureComponent<Props, State> {
   static defaultProps = {
     defaultValue: "",
@@ -137,9 +149,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   plugins: Plugin[];
   keymaps: Plugin[];
   inputRules: InputRule[];
-  nodeViews: {
-    [name: string]: (node, view, getPos, decorations) => ComponentView;
-  };
+  nodeViews: { [name: string]: NodeViewConstructor };
   nodes: { [name: string]: NodeSpec };
   marks: { [name: string]: MarkSpec };
   commands: Record<string, any>;
@@ -261,8 +271,11 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
         new Placeholder({
           placeholder: this.props.placeholder,
         }),
+        new MergeConflict(),
+        new MergeSection(),
+        new Unconflicted(),
         ...this.props.extensions,
-      ],
+      ] as Extension[],
       this
     );
   }
@@ -283,26 +296,30 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  createNodeViews() {
+  createNodeViews(): { [name: string]: NodeViewConstructor } {
     return this.extensions.extensions
-      .filter((extension: ReactNode) => extension.component)
-      .reduce((nodeViews, extension: ReactNode) => {
-        const nodeView = (node, view, getPos, decorations) => {
-          return new ComponentView(extension.component, {
-            editor: this,
-            extension,
-            node,
-            view,
-            getPos,
-            decorations,
-          });
+      .filter((extension: Extension) => {
+        return (extension as any).component !== undefined
+      })
+      .reduce((nodeViews, extension) => {
+        const nodeViewConstructor: NodeViewConstructor = (node, view, getPos, decorations) => {
+          const dom = document.createElement('div')
+          dom.style.display = 'flex'
+
+          const contentDOM = document.createElement('div')
+          contentDOM.style.flex = '1'
+          contentDOM.addEventListener("click", () => console.log("AYYYYYY"))
+          dom.appendChild(contentDOM)
+
+
+          return { dom, contentDOM }
         };
 
         return {
           ...nodeViews,
-          [extension.name]: nodeView,
+          [extension.name]: nodeViewConstructor,
         };
-      }, {});
+      }, {} as { [name: string]: NodeViewConstructor });
   }
 
   createCommands() {
@@ -340,6 +357,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   createState(value?: string) {
     const doc = this.createDocument(value || this.props.defaultValue);
 
+
     console.log(doc)
 
     return EditorState.create({
@@ -359,7 +377,34 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   }
 
   createDocument(content: string) {
-    return this.parser.parse(content);
+    return this.schema.nodes.doc.create(
+      {},
+      Fragment.fromArray(parseConflicts(content).map(portion => {
+        console.log(portion)
+        if (typeof portion === "string") {
+          const unconflicted = this.schema.nodes.unconflicted.create(
+            {},
+            this.parser.parse(portion).content
+          )
+          console.log("HEY!", unconflicted)
+          return unconflicted
+        } else {
+          return this.schema.nodes.merge_conflict.create(
+            {},
+            Fragment.fromArray([
+              this.schema.nodes.merge_section.create(
+                { identity: ConflictIdentity.CURRENT },
+                this.parser.parse(portion.mine).content
+              ),
+              this.schema.nodes.merge_section.create(
+                { identity: ConflictIdentity.INCOMING },
+                this.parser.parse(portion.theirs).content
+              )
+            ])
+          )
+        }
+      }))
+    )
   }
 
   createView() {
