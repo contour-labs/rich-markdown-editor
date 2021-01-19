@@ -22,13 +22,14 @@ import {
   addRowAt,
 } from "prosemirror-utils";
 import { Plugin, TextSelection } from "prosemirror-state";
+import { NodeSpec } from "prosemirror-model";
 
 export default class Table extends Node {
   get name() {
     return "table";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       content: "tr+",
       tableRole: "table",

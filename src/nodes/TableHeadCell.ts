@@ -2,13 +2,15 @@ import { DecorationSet, Decoration } from "prosemirror-view";
 import { Plugin } from "prosemirror-state";
 import { isColumnSelected, getCellsInRow } from "prosemirror-utils";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
+import Token = require("markdown-it/lib/token");
 
 export default class TableHeadCell extends Node {
   get name() {
     return "th";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       content: "paragraph+",
       tableRole: "header_cell",
@@ -17,9 +19,9 @@ export default class TableHeadCell extends Node {
       toDOM(node) {
         return [
           "th",
-          node.attrs.alignment
+          (node.attrs.alignment
             ? { style: `text-align: ${node.attrs.alignment}` }
-            : {},
+            : {}) as { [attr: string]: string },
           0,
         ];
       },
@@ -38,7 +40,7 @@ export default class TableHeadCell extends Node {
   parseMarkdown() {
     return {
       block: "th",
-      getAttrs: tok => ({ alignment: tok.info }),
+      getAttrs: (token: Token) => ({ alignment: token.info }),
     };
   }
 

@@ -1,13 +1,14 @@
 import { wrappingInputRule } from "prosemirror-inputrules";
 import toggleList from "../commands/toggleList";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
 
 export default class OrderedList extends Node {
   get name() {
     return "ordered_list";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       attrs: {
         order: {

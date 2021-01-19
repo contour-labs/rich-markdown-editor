@@ -1,12 +1,14 @@
 import { InputRule } from "prosemirror-inputrules";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
+import { TokenConfig } from "prosemirror-markdown";
 
 export default class HorizontalRule extends Node {
   get name() {
     return "hr";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       group: "block",
       parseDOM: [{ tag: "hr" }],
@@ -51,7 +53,7 @@ export default class HorizontalRule extends Node {
     state.closeBlock(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { node: "hr" };
   }
 }

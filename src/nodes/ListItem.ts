@@ -4,13 +4,14 @@ import {
   liftListItem,
 } from "prosemirror-schema-list";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
 
 export default class ListItem extends Node {
   get name() {
     return "list_item";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       content: "paragraph block*",
       defining: true,

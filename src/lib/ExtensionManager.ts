@@ -1,4 +1,4 @@
-import { Schema } from "prosemirror-model";
+import { Schema, NodeSpec } from "prosemirror-model";
 import { keymap } from "prosemirror-keymap";
 import { MarkdownParser } from "prosemirror-markdown";
 import { MarkdownSerializer } from "./markdown/serializer";
@@ -23,7 +23,7 @@ export default class ExtensionManager {
     this.embeds = editor ? editor.props.embeds : undefined;
   }
 
-  get nodes() {
+  get nodes(): { [name: string]: NodeSpec } {
     return this.extensions
       .filter(extension => extension.type === "node")
       .reduce(
@@ -153,8 +153,8 @@ export default class ExtensionManager {
           schema,
           ...(["node", "mark"].includes(type)
             ? {
-                type: schema[`${type}s`][name],
-              }
+              type: schema[`${type}s`][name],
+            }
             : {}),
         });
 

@@ -18,6 +18,7 @@ import { textblockTypeInputRule } from "prosemirror-inputrules";
 import copy from "copy-to-clipboard";
 import Prism, { LANGUAGES } from "../plugins/Prism";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
 
 [
   bash,
@@ -44,7 +45,7 @@ export default class CodeFence extends Node {
     return "code_fence";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       attrs: {
         language: {
@@ -79,8 +80,8 @@ export default class CodeFence extends Node {
         return [
           "div",
           { class: "code-block" },
-          ["div", { contentEditable: false }, select, button],
-          ["pre", ["code", { spellCheck: false }, 0]],
+          ["div", { contentEditable: "false" }, select, button],
+          ["pre", ["code", { spellCheck: "false" }, 0]],
         ];
       },
     };

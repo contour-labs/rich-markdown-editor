@@ -1,13 +1,14 @@
 import { wrappingInputRule } from "prosemirror-inputrules";
 import Node from "./Node";
 import toggleWrap from "../commands/toggleWrap";
+import { NodeSpec } from "prosemirror-model";
 
 export default class Blockquote extends Node {
   get name() {
     return "blockquote";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       content: "block+",
       group: "block",

@@ -4,13 +4,14 @@ import {
   liftListItem,
 } from "prosemirror-schema-list";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
 
 export default class CheckboxItem extends Node {
   get name() {
     return "checkbox_item";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       attrs: {
         id: {
@@ -27,10 +28,9 @@ export default class CheckboxItem extends Node {
         {
           tag: `li[data-type="${this.name}"]`,
           getAttrs: dom => ({
-            checked: dom.getElementsByTagName("input")[0].checked
-              ? true
-              : false,
-          }),
+            checked: (dom as Document).getElementsByTagName("input")[0].checked
+          })
+          ,
         },
       ],
       toDOM: node => {
@@ -43,16 +43,19 @@ export default class CheckboxItem extends Node {
           input.checked = true;
         }
 
+        const attrs: { [attr: string]: string } = {
+          "data-type": this.name,
+        }
+        if (node.attrs.checked) {
+          attrs.class = "checked"
+        }
         return [
           "li",
-          {
-            "data-type": this.name,
-            class: node.attrs.checked ? "checked" : undefined,
-          },
+          attrs,
           [
             "span",
             {
-              contentEditable: false,
+              contentEditable: "false",
             },
             input,
           ],

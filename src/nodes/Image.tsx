@@ -7,6 +7,7 @@ import getDataTransferFiles from "../lib/getDataTransferFiles";
 import uploadPlaceholderPlugin from "../lib/uploadPlaceholder";
 import insertFiles from "../commands/insertFiles";
 import Node from "./Node";
+import { NodeSpec, DOMOutputSpec } from "prosemirror-model";
 
 /**
  * Matches following attributes in Markdown-typed image: [, alt, src, title]
@@ -77,7 +78,7 @@ export default class Image extends Node {
     return "image";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       inline: true,
       attrs: {
@@ -107,10 +108,8 @@ export default class Image extends Node {
       toDOM: node => {
         return [
           "div",
-          {
-            class: "image",
-          },
-          ["img", { ...node.attrs, contentEditable: false }],
+          { class: "image" } as { [attr: string]: string },
+          ["img", { ...node.attrs, contentEditable: "false" }],
           ["p", { class: "caption" }, 0],
         ];
       },
@@ -181,10 +180,10 @@ export default class Image extends Node {
   toMarkdown(state, node) {
     state.write(
       "![" +
-        state.esc((node.attrs.alt || "").replace("\n", "") || "") +
-        "](" +
-        state.esc(node.attrs.src) +
-        ")"
+      state.esc((node.attrs.alt || "").replace("\n", "") || "") +
+      "](" +
+      state.esc(node.attrs.src) +
+      ")"
     );
   }
 

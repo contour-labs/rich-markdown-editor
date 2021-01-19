@@ -1,14 +1,16 @@
 import { Plugin } from "prosemirror-state";
 import copy from "copy-to-clipboard";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import { Node as ProsemirrorNode, NodeType } from "prosemirror-model";
+import { Node as ProsemirrorNode, NodeType, NodeSpec } from "prosemirror-model";
 import { textblockTypeInputRule } from "prosemirror-inputrules";
 import { setBlockType } from "prosemirror-commands";
-import { MarkdownSerializerState } from "prosemirror-markdown";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 import backspaceToParagraph from "../commands/backspaceToParagraph";
 import toggleBlockType from "../commands/toggleBlockType";
 import headingToSlug from "../lib/headingToSlug";
 import Node from "./Node";
+import Token from "markdown-it/lib/token";
+import { conflictColors } from "../lib/markdown/mergeConflictPlugin";
 
 export default class Heading extends Node {
   get name() {
@@ -21,11 +23,17 @@ export default class Heading extends Node {
     };
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       attrs: {
         level: {
           default: 1,
+        },
+        conflictId: {
+          default: undefined
+        },
+        conflictIdentity: {
+          default: undefined
         },
       },
       content: "inline*",
@@ -36,15 +44,22 @@ export default class Heading extends Node {
         tag: `h${level}`,
         attrs: { level },
       })),
-      toDOM: node => {
+      toDOM: (node: ProsemirrorNode) => {
+        const { level, conflictIdentity } = node.attrs
+
         const button = document.createElement("button");
         button.innerText = "#";
         button.type = "button";
         button.className = "heading-anchor";
         button.addEventListener("click", this.handleCopyLink());
 
+        const attrs: { [attr: string]: string } = {}
+        if (conflictIdentity) {
+          attrs.style = `background: ${conflictColors.get(conflictIdentity)};`
+        }
         return [
-          `h${node.attrs.level + (this.options.offset || 0)}`,
+          `h${level + (this.options.offset || 0)}`,
+          attrs,
           button,
           ["span", 0],
         ];
@@ -61,10 +76,12 @@ export default class Heading extends Node {
   parseMarkdown() {
     return {
       block: "heading",
-      getAttrs: (token: Record<string, any>) => ({
+      getAttrs: (token: Token): Record<string, any> => ({
         level: +token.tag.slice(1),
+        conflictId: token.attrGet("conflictId"),
+        conflictIdentity: token.attrGet("conflictIdentity"),
       }),
-    };
+    } as TokenConfig;
   }
 
   commands({ type, schema }) {

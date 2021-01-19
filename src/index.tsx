@@ -182,6 +182,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     this.nodes = this.createNodes();
     this.marks = this.createMarks();
     this.schema = this.createSchema();
+    console.log(this.schema)
     this.plugins = this.createPlugins();
     this.keymaps = this.createKeymaps();
     this.serializer = this.createSerializer();
@@ -338,6 +339,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
 
   createState(value?: string) {
     const doc = this.createDocument(value || this.props.defaultValue);
+
+    console.log(doc)
 
     return EditorState.create({
       schema: this.schema,
@@ -567,7 +570,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   };
 }
 
-const StyledEditor = styled("div")<{ readOnly?: boolean }>`
+const StyledEditor = styled("div") <{ readOnly?: boolean }>`
   color: ${props => props.theme.text};
   background: ${props => props.theme.background};
   font-family: ${props => props.theme.fontFamily};
@@ -1017,7 +1020,7 @@ const StyledEditor = styled("div")<{ readOnly?: boolean }>`
 
     .selectedCell {
       background: ${props =>
-        props.readOnly ? "inherit" : props.theme.tableSelectedBackground};
+    props.readOnly ? "inherit" : props.theme.tableSelectedBackground};
     }
 
     .grip-column {

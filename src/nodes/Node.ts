@@ -1,5 +1,5 @@
 import { MarkdownSerializerState } from "prosemirror-markdown";
-import { Node as ProsemirrorNode } from "prosemirror-model";
+import { Node as ProsemirrorNode, NodeSpec } from "prosemirror-model";
 import Extension from "../lib/Extension";
 
 export default abstract class Node extends Extension {
@@ -7,7 +7,7 @@ export default abstract class Node extends Extension {
     return "node";
   }
 
-  abstract get schema();
+  abstract get schema(): NodeSpec;
 
   get markdownToken(): string {
     return "";

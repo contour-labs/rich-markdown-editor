@@ -6,13 +6,15 @@ import {
   getCellsInColumn,
 } from "prosemirror-utils";
 import Node from "./Node";
+import Token = require("markdown-it/lib/token");
+import { NodeSpec } from "prosemirror-model";
 
 export default class TableCell extends Node {
   get name() {
     return "td";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       content: "paragraph+",
       tableRole: "cell",
@@ -21,9 +23,9 @@ export default class TableCell extends Node {
       toDOM(node) {
         return [
           "td",
-          node.attrs.alignment
+          (node.attrs.alignment
             ? { style: `text-align: ${node.attrs.alignment}` }
-            : {},
+            : {}) as { [attr: string]: string },
           0,
         ];
       },
@@ -42,7 +44,7 @@ export default class TableCell extends Node {
   parseMarkdown() {
     return {
       block: "td",
-      getAttrs: tok => ({ alignment: tok.info }),
+      getAttrs: (token: Token) => ({ alignment: token.info }),
     };
   }
 

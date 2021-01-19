@@ -1,12 +1,13 @@
 import * as React from "react";
 import Node from "./Node";
+import { NodeSpec } from "prosemirror-model";
 
 export default class Embed extends Node {
   get name() {
     return "embed";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       content: "inline*",
       group: "block",
@@ -18,7 +19,7 @@ export default class Embed extends Node {
       parseDOM: [{ tag: "iframe" }],
       toDOM: node => [
         "iframe",
-        { src: node.attrs.href, contentEditable: false },
+        { src: node.attrs.href, contentEditable: "false" },
         0,
       ],
     };
