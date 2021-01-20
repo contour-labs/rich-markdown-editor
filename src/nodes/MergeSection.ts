@@ -32,6 +32,7 @@ export default class MergeSection extends NodeWithNodeView {
     return {
       content: "block*",
       group: "block",
+      selectable: false,
       attrs: {
         identity: {
           default: undefined
@@ -65,6 +66,14 @@ export default class MergeSection extends NodeWithNodeView {
       }
 
       const handler = (generateUnconflicted: (self: Node, parent: Node) => Node) => {
+        const pieces = window.location.href.split("#")
+        if (pieces.length == 2) {
+          const matches = /^conflict([0-9])+$/g.exec(pieces[1])
+          if (matches) {
+            const next = +matches[1] + 1
+            window.location.href = pieces[0] + `#conflict${next}`
+          }
+        }
         view.state.doc.descendants((parentCandidate, pos) => {
           const { type, attrs } = parentCandidate
           if (type.name === "merge_conflict" && attrs.conflictId === node.attrs.conflictId) {

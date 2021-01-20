@@ -19,6 +19,7 @@ export default class MergeConflict extends NodeWithNodeView {
     return {
       content: "block*",
       group: "block",
+      selectable: false,
       attrs: {
         conflictId: {
           default: undefined
@@ -28,9 +29,13 @@ export default class MergeConflict extends NodeWithNodeView {
   }
 
   get nodeViewConstructor(): NodeViewConstructor {
-    return (): NodeView => {
+    return (node): NodeView => {
       const dom = document.createElement('section')
       dom.style.display = 'flex'
+
+      const locator = document.createElement("a")
+      locator.id = `conflict${node.attrs.conflictId}`
+      dom.appendChild(locator)
 
       const contentDOM = document.createElement('div')
       contentDOM.style.flex = '1'
