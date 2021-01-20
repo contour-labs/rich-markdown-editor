@@ -665,7 +665,8 @@ const StyledEditor = styled("div") <{ readOnly?: boolean }>`
     }
   }
 
-  div.unconflictedDOM:first-child div.unconflictedContentDOM a.heading-name {
+  div.ProseMirror > a.heading-name:first-child,
+  div.unconflictedDOM:first-child > div.unconflictedContentDOM > a.heading-name {
     h1,
     h2,
     h3,
