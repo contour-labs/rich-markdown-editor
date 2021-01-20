@@ -1,8 +1,9 @@
-import { NodeSpec } from "prosemirror-model";
-import NodeWithNodeView from "./NodeWithNodeView";
-import { NodeViewConstructor } from "..";
+import { NodeSpec, Node } from "prosemirror-model";
+import NodeWithNodeView from "../NodeWithNodeView";
+import { NodeViewConstructor } from "../..";
 import { NodeView } from "prosemirror-view";
 import { mergeSectionThemes } from "./MergeSection";
+import { MarkdownSerializerState } from "prosemirror-markdown";
 
 export default class Unconflicted extends NodeWithNodeView {
 
@@ -51,6 +52,7 @@ export default class Unconflicted extends NodeWithNodeView {
         dom.style.cursor = "pointer"
         dom.addEventListener("click", () => {
           const pos = getPos()
+          view.state.doc.attrs.conflictCount += 1
           view.dispatch(view.state.tr.replaceRangeWith(pos, pos + node.nodeSize, originalConflict))
         })
       }
@@ -59,6 +61,10 @@ export default class Unconflicted extends NodeWithNodeView {
 
       return { dom, contentDOM }
     }
+  }
+
+  toMarkdown(state: MarkdownSerializerState, node: Node) {
+    state.renderContent(node)
   }
 
 }

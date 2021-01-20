@@ -1,7 +1,7 @@
 import { NodeSpec, Fragment, Node } from "prosemirror-model";
-import NodeWithNodeView from "./NodeWithNodeView";
+import NodeWithNodeView from "../NodeWithNodeView";
 import { NodeView } from "prosemirror-view";
-import { NodeViewConstructor } from "..";
+import { NodeViewConstructor } from "../..";
 import { ConflictIdentity } from "./MergeConflict";
 
 export const mergeSectionThemes = {
@@ -74,6 +74,7 @@ export default class MergeSection extends NodeWithNodeView {
             window.location.href = pieces[0] + `#conflict${next}`
           }
         }
+        view.state.doc.attrs.conflictCount -= 1
         view.state.doc.descendants((parentCandidate, pos) => {
           const { type, attrs } = parentCandidate
           if (type.name === "merge_conflict" && attrs.conflictId === node.attrs.conflictId) {

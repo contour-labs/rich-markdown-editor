@@ -1,6 +1,6 @@
 import { NodeSpec } from "prosemirror-model";
-import NodeWithNodeView from "./NodeWithNodeView";
-import { NodeViewConstructor } from "../index"
+import NodeWithNodeView from "../NodeWithNodeView";
+import { NodeViewConstructor } from "../../index"
 import { NodeView } from "prosemirror-view";
 
 export enum ConflictIdentity {

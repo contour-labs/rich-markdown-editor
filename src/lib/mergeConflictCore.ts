@@ -14,33 +14,40 @@ export interface MergeConflict {
   tail: string
 }
 
-export const parseConflicts = (fileContents: string): (MergeConflict | string)[] | false => {
+export const parseConflicts = (fileContents: string): { partitions: (MergeConflict | string)[], conflictCount: number } | false => {
   const conflictSeeker = /<<<<<<< HEAD\n([\s\S]+?(?=\n=======))\n=======\n([\s\S]+?(?=\n>>>>>>> [a-z0-9]+\n))(\n>>>>>>> [a-z0-9]+\n)/g
-  const conflicts: (MergeConflict | string)[] = []
+  const partitions: (MergeConflict | string)[] = []
   let matches: RegExpExecArray | null;
+  let conflictCount = 0
 
   while ((matches = conflictSeeker.exec(fileContents)) != null) {
+    conflictCount += 1
+
     const [fullMatch, mine, theirs, tail] = matches
     const startIndex = matches.index
     const endIndex = startIndex + fullMatch.length
 
     // Everything (unconflicted portion of document) lying between either the start of the document and
     // the first conflict or the end of the previous conflict and the start the current one
-    const intermediateStartIndex = !conflicts.length ? 0 : (conflicts[conflicts.length - 1] as MergeConflict).endIndex
+    const intermediateStartIndex = !partitions.length ? 0 : (partitions[partitions.length - 1] as MergeConflict).endIndex
     const intermediateEndIndex = startIndex
     if (intermediateStartIndex !== intermediateEndIndex) {
-      conflicts.push(fileContents.slice(intermediateStartIndex, intermediateEndIndex))
+      partitions.push(fileContents.slice(intermediateStartIndex, intermediateEndIndex))
     }
 
-    conflicts.push({ mine, theirs, startIndex, endIndex, tail })
+    partitions.push({ mine, theirs, startIndex, endIndex, tail })
   }
-  if (conflicts.length) {
-    conflicts.push(fileContents.slice((conflicts[conflicts.length - 1] as MergeConflict).endIndex))
+
+  if (partitions.length) {
+    const startIndex = (partitions[partitions.length - 1] as MergeConflict).endIndex
+    if (startIndex != fileContents.length) {
+      partitions.push(fileContents.slice(startIndex))
+    }
   } else {
     return false
   }
 
-  return conflicts
+  return { partitions, conflictCount }
 }
 
 export const resolveConflict = (contents: string, conflictsSlice: MergeConflict[], resolution: Resolution): string => {

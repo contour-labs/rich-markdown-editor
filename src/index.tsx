@@ -5,7 +5,7 @@ import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
 import { EditorView, Decoration, NodeView } from "prosemirror-view";
-import { Schema, NodeSpec, MarkSpec, Node as ProsemirrorNode, Slice, Fragment } from "prosemirror-model";
+import { Schema, NodeSpec, MarkSpec, Node as ProsemirrorNode, Fragment } from "prosemirror-model";
 import { inputRules, InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
 import { baseKeymap } from "prosemirror-commands";
@@ -61,10 +61,10 @@ import Placeholder from "./plugins/Placeholder";
 import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
-import { parseConflicts } from "./lib/merge_core";
-import MergeConflict, { ConflictIdentity } from "./nodes/MergeConflict";
-import MergeSection from "./nodes/MergeSection";
-import Unconflicted from "./nodes/Unconflicted";
+import { parseConflicts } from "./lib/mergeConflictCore";
+import MergeConflict, { ConflictIdentity } from "./nodes/MergeConflict/MergeConflict";
+import MergeSection from "./nodes/MergeConflict/MergeSection";
+import Unconflicted from "./nodes/MergeConflict/Unconflicted";
 
 export { schema, parser, serializer } from "./server";
 
@@ -353,14 +353,15 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   }
 
   createDocument(content: string) {
-    const conflicts = parseConflicts(content)
-    if (conflicts === false) {
+    const parseResults = parseConflicts(content)
+    if (parseResults === false) {
       return this.parser.parse(content)
     }
+    const { partitions, conflictCount } = parseResults
     let conflictId = 0
     return this.schema.nodes.doc.create(
-      {},
-      Fragment.fromArray(conflicts.map(portion => {
+      { conflictCount },
+      Fragment.fromArray(partitions.map(portion => {
         if (typeof portion === "string") {
           return this.schema.nodes.unconflicted.create(
             {},
@@ -445,6 +446,9 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   };
 
   handleChange = () => {
+    if (!this.view.state.doc.attrs.conflictCount) {
+      alert(this.value())
+    }
     if (this.props.onChange && !this.props.readOnly) {
       this.props.onChange(() => {
         return this.value();
