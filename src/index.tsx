@@ -666,7 +666,7 @@ const StyledEditor = styled("div") <{ readOnly?: boolean }>`
     }
   }
 
-  a:first-child {
+  div.unconflictedDOM:first-child div.unconflictedContentDOM a.heading-name {
     h1,
     h2,
     h3,

@@ -31,11 +31,14 @@ class Unconflicted extends NodeWithNodeView {
   get nodeViewConstructor(): NodeViewConstructor {
     return (node, view, getPos): NodeView => {
       const dom = document.createElement('div')
+      dom.className = "unconflictedDOM"
       dom.style.display = 'flex'
       dom.style.flexDirection = "column"
 
       const contentDOM = document.createElement('div')
+      contentDOM.className = "unconflictedContentDOM"
       contentDOM.style.flex = '1'
+      contentDOM.appendChild(document.createElement("marquee"))
 
       if (node.attrs.originalConflict && typeof getPos === "function") {
         this.makeAbleToUnresolve(dom, node, view, getPos)
