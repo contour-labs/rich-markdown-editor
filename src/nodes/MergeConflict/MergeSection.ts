@@ -78,8 +78,8 @@ class MergeSection extends NodeWithNodeView {
         view.state.doc.descendants((parentCandidate, pos) => {
           const { type, attrs } = parentCandidate
           if (type.name === "merge_conflict" && attrs.conflictId === conflictId) {
-            const conflicted = generateUnconflicted(node, parentCandidate)
-            view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, conflicted))
+            const unconflicted = generateUnconflicted(node, parentCandidate)
+            view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, unconflicted))
           }
         })
       }
@@ -166,17 +166,11 @@ class MergeSection extends NodeWithNodeView {
     tail.style.background = backgroundDark
   }
 
-  private advanceToNextConflict = (): boolean => {
-    const pieces = window.location.href.split("#")
-    if (pieces.length == 2) {
-      const matches = /^conflict([0-9])+$/g.exec(pieces[1])
-      if (matches) {
-        const next = +matches[1] + 1
-        window.location.href = pieces[0] + `#conflict${next}`
-        return true
-      }
+  private advanceToNextConflict = (): void => {
+    const matches = /^#conflict([0-9])+$/g.exec(window.location.hash)
+    if (matches) {
+      window.location.hash = `#conflict${+matches[1] + 1}`
     }
-    return false
   }
 
 }
