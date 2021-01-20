@@ -38,7 +38,6 @@ class Unconflicted extends NodeWithNodeView {
       const contentDOM = document.createElement('div')
       contentDOM.className = "unconflictedContentDOM"
       contentDOM.style.flex = '1'
-      contentDOM.appendChild(document.createElement("marquee"))
 
       if (node.attrs.originalConflict && typeof getPos === "function") {
         this.makeAbleToUnresolve(dom, node, view, getPos)
