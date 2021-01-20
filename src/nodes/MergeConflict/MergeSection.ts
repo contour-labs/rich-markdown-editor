@@ -121,7 +121,7 @@ class MergeSection extends NodeWithNodeView {
     }
   }
 
-  private createPartitioner = () => {
+  private createPartitioner = (): HTMLParagraphElement => {
     const p = document.createElement("p")
     p.style.cursor = "pointer"
     p.style.fontWeight = "500"
