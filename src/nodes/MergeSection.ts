@@ -58,9 +58,9 @@ export default class MergeSection extends NodeWithNodeView {
 
       const blankConflictSegment = () => {
         const p = document.createElement("p")
+        p.style.cursor = "pointer"
         p.style.fontWeight = "500"
         p.style.padding = "5px 10px"
-        p.style.cursor = "pointer"
         return p
       }
 
@@ -79,8 +79,11 @@ export default class MergeSection extends NodeWithNodeView {
       }
 
       const labelledMargin = blankConflictSegment()
-      labelledMargin.title = `Accept ${identity}`
-      labelledMargin.addEventListener("click", () => handler((self, parent) => {
+
+      const acceptWrapper = document.createElement("div")
+      acceptWrapper.title = `Accept ${identity}`
+      acceptWrapper.style.cursor = "pointer"
+      acceptWrapper.addEventListener("click", () => handler((self, parent) => {
         const attrs = { originalConflict: parent, chosenIdentity: identity }
         return blankUnconflicted(self.content, attrs)
       }))
@@ -91,9 +94,11 @@ export default class MergeSection extends NodeWithNodeView {
         const currentTheme = mergeSectionThemes[ConflictIdentity.CURRENT]
         labelledMargin.style.color = currentTheme.color
         labelledMargin.style.background = currentTheme.backgroundDark
-        dom.appendChild(labelledMargin)
+
         // Then, render the markdown child content
-        dom.appendChild(contentDOM)
+        acceptWrapper.appendChild(labelledMargin)
+        acceptWrapper.appendChild(contentDOM)
+        dom.appendChild(acceptWrapper)
       } else {
         // Initialize and render the middle "=======" panel
         const separator = blankConflictSegment()
@@ -113,13 +118,15 @@ export default class MergeSection extends NodeWithNodeView {
         })
         dom.appendChild(separator)
         // Then, render the markdown child content
-        dom.appendChild(contentDOM)
+        acceptWrapper.append(contentDOM)
         // Finally, initialize and render the trailing ">>>>>>>" panel
         labelledMargin.textContent = ">>>>>>>"
         const incomingTheme = mergeSectionThemes[ConflictIdentity.INCOMING]
         labelledMargin.style.color = incomingTheme.color
         labelledMargin.style.background = incomingTheme.backgroundDark
-        dom.appendChild(labelledMargin)
+
+        acceptWrapper.appendChild(labelledMargin)
+        dom.appendChild(acceptWrapper)
       }
 
       return { dom, contentDOM }

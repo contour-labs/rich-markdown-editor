@@ -34,6 +34,8 @@ export default class MergeConflict extends NodeWithNodeView {
 
       const contentDOM = document.createElement('div')
       contentDOM.style.flex = '1'
+      contentDOM.style.border = "1px solid #ebebeb"
+      contentDOM.style.margin = "10px 0";
 
       dom.appendChild(contentDOM)
 

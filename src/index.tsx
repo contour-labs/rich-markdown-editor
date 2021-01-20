@@ -367,10 +367,6 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
             this.parser.parse(portion).content
           )
         } else {
-          const mineContent = this.parser.parse(portion.mine).content
-          const theirsContent = this.parser.parse(portion.theirs).content
-          console.log("Mine", mineContent)
-          console.log("Theirs", theirsContent)
           const mergeConflict = this.schema.nodes.merge_conflict.create(
             { conflictId },
             Fragment.fromArray([
@@ -379,14 +375,14 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
                   identity: ConflictIdentity.CURRENT,
                   conflictId
                 },
-                mineContent
+                this.parser.parse(portion.mine).content
               ),
               this.schema.nodes.merge_section.create(
                 {
                   identity: ConflictIdentity.INCOMING,
                   conflictId
                 },
-                theirsContent
+                this.parser.parse(portion.theirs).content
               )
             ])
           )

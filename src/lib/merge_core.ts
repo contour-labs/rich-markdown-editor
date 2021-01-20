@@ -23,7 +23,15 @@ export const parseConflicts = (fileContents: string): (MergeConflict | string)[]
     const [fullMatch, mine, theirs, tail] = matches
     const startIndex = matches.index
     const endIndex = startIndex + fullMatch.length
-    conflicts.push(fileContents.slice(!conflicts.length ? 0 : (conflicts[conflicts.length - 1] as MergeConflict).endIndex, startIndex))
+
+    // Everything (unconflicted portion of document) lying between either the start of the document and
+    // the first conflict or the end of the previous conflict and the start the current one
+    const intermediateStartIndex = !conflicts.length ? 0 : (conflicts[conflicts.length - 1] as MergeConflict).endIndex
+    const intermediateEndIndex = startIndex
+    if (intermediateStartIndex !== intermediateEndIndex) {
+      conflicts.push(fileContents.slice(intermediateStartIndex, intermediateEndIndex))
+    }
+
     conflicts.push({ mine, theirs, startIndex, endIndex, tail })
   }
   if (conflicts.length) {
