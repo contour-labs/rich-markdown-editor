@@ -9,7 +9,7 @@ export enum ConflictIdentity {
   BOTH = "Both"
 }
 
-export default class MergeConflict extends NodeWithNodeView {
+class MergeConflict extends NodeWithNodeView {
 
   get name() {
     return "merge_conflict";
@@ -52,3 +52,5 @@ export default class MergeConflict extends NodeWithNodeView {
   }
 
 }
+
+export default MergeConflict

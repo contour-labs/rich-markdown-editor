@@ -413,7 +413,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
 
   handleChange = () => {
     if (!this.view.state.doc.attrs.conflictCount) {
-      alert(this.value())
+      console.log(this.value())
     }
     if (this.props.onChange && !this.props.readOnly) {
       this.props.onChange(() => {

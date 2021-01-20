@@ -4,7 +4,13 @@ import { NodeView } from "prosemirror-view";
 import { NodeViewConstructor } from "../..";
 import { ConflictIdentity } from "./MergeConflict";
 
-export const mergeSectionThemes = {
+interface Theme {
+  color: string
+  backgroundLight: string
+  backgroundDark: string
+}
+
+export const mergeSectionThemes: { [identity: string]: Theme } = {
   [ConflictIdentity.CURRENT]: {
     color: "#17a34a",
     backgroundLight: "#dcfce6",
@@ -22,7 +28,14 @@ export const mergeSectionThemes = {
   }
 }
 
-export default class MergeSection extends NodeWithNodeView {
+interface UnconflictedAttrs {
+  originalConflict: Node,
+  chosenIdentity: ConflictIdentity
+}
+
+type ClickHandler = (generateUnconflicted: (self: Node, parent: Node) => Node) => void
+
+class MergeSection extends NodeWithNodeView {
 
   get name() {
     return "merge_section";
@@ -49,7 +62,7 @@ export default class MergeSection extends NodeWithNodeView {
 
   get nodeViewConstructor(): NodeViewConstructor {
     return (node, view): NodeView => {
-      const { identity, conflictId, commitHash } = node.attrs
+      const { identity, conflictId } = node.attrs
 
       const dom = document.createElement('div')
       dom.style.display = 'flex'
@@ -60,23 +73,7 @@ export default class MergeSection extends NodeWithNodeView {
       contentDOM.style.padding = "5px 10px"
       contentDOM.style.background = mergeSectionThemes[identity].backgroundLight
 
-      const blankConflictSegment = () => {
-        const p = document.createElement("p")
-        p.style.cursor = "pointer"
-        p.style.fontWeight = "500"
-        p.style.padding = "5px 10px"
-        return p
-      }
-
-      const handler = (generateUnconflicted: (self: Node, parent: Node) => Node) => {
-        const pieces = window.location.href.split("#")
-        if (pieces.length == 2) {
-          const matches = /^conflict([0-9])+$/g.exec(pieces[1])
-          if (matches) {
-            const next = +matches[1] + 1
-            window.location.href = pieces[0] + `#conflict${next}`
-          }
-        }
+      const handler = (generateUnconflicted: (self: Node, parent: Node) => Node): void => {
         view.state.doc.attrs.conflictCount -= 1
         view.state.doc.descendants((parentCandidate, pos) => {
           const { type, attrs } = parentCandidate
@@ -87,63 +84,101 @@ export default class MergeSection extends NodeWithNodeView {
         })
       }
 
-      const blankUnconflicted = (content: Fragment | undefined, conflictInfo: { originalConflict: Node, chosenIdentity: ConflictIdentity } | undefined): Node => {
+      const createUnconflictedFrom = (content?: Fragment, conflictInfo?: UnconflictedAttrs): Node => {
         return view.state.schema.nodes.unconflicted.create(conflictInfo, content)
       }
 
-      const labelledMargin = blankConflictSegment()
+      // This is an initially generic partitioner, but will be initialized
+      // as either a head or a tail depending on this node's attributes
+      const partitioner = this.createPartitioner()
 
-      const acceptWrapper = document.createElement("div")
-      acceptWrapper.title = `Accept ${identity}`
-      acceptWrapper.style.cursor = "pointer"
-      acceptWrapper.addEventListener("click", () => handler((self, parent) => {
-        const attrs = { originalConflict: parent, chosenIdentity: identity }
-        return blankUnconflicted(self.content, attrs)
+      const clickContainer = document.createElement("div")
+      clickContainer.title = `Accept ${identity}`
+      clickContainer.style.cursor = "pointer"
+      clickContainer.addEventListener("click", () => handler((self, parent) => {
+        return createUnconflictedFrom(self.content, {
+          originalConflict: parent,
+          chosenIdentity: identity
+        })
       }))
 
       if (identity === ConflictIdentity.CURRENT) {
-        // Initialize and render the opening "<<<<<<<" panel
-        labelledMargin.textContent = "<<<<<<< HEAD"
-        const currentTheme = mergeSectionThemes[ConflictIdentity.CURRENT]
-        labelledMargin.style.color = currentTheme.color
-        labelledMargin.style.background = currentTheme.backgroundDark
-
-        // Then, render the markdown child content
-        acceptWrapper.appendChild(labelledMargin)
-        acceptWrapper.appendChild(contentDOM)
-        dom.appendChild(acceptWrapper)
+        this.formatHead(partitioner)
+        clickContainer.appendChild(partitioner)
+        clickContainer.appendChild(contentDOM)
       } else {
-        // Initialize and render the middle "=======" panel
-        const separator = blankConflictSegment()
-        separator.textContent = "======="
-        const bothTheme = mergeSectionThemes[ConflictIdentity.BOTH]
-        separator.style.color = bothTheme.color
-        separator.style.background = bothTheme.backgroundDark
-        separator.title = "Accept Both"
-        separator.addEventListener("click", () => {
-          handler((self, parent) => {
-            const attrs = { originalConflict: parent, chosenIdentity: ConflictIdentity.BOTH }
-            return blankUnconflicted(Fragment.fromArray([
-              blankUnconflicted(parent.firstChild?.content, undefined),
-              blankUnconflicted(self.content, undefined),
-            ]), attrs)
-          })
-        })
-        dom.appendChild(separator)
-        // Then, render the markdown child content
-        acceptWrapper.append(contentDOM)
-        // Finally, initialize and render the trailing ">>>>>>>" panel
-        labelledMargin.textContent = `>>>>>>> ${commitHash}`
-        const incomingTheme = mergeSectionThemes[ConflictIdentity.INCOMING]
-        labelledMargin.style.color = incomingTheme.color
-        labelledMargin.style.background = incomingTheme.backgroundDark
-
-        acceptWrapper.appendChild(labelledMargin)
-        dom.appendChild(acceptWrapper)
+        this.formatTail(partitioner)
+        // The middle partitioner is arbitrarily placed above the tail, but
+        // it could just as easily be below the head
+        dom.appendChild(this.createMiddle(handler, createUnconflictedFrom))
+        clickContainer.appendChild(contentDOM)
+        clickContainer.appendChild(partitioner)
       }
+
+      dom.appendChild(clickContainer)
 
       return { dom, contentDOM }
     }
   }
 
+  private createPartitioner = () => {
+    const p = document.createElement("p")
+    p.style.cursor = "pointer"
+    p.style.fontWeight = "500"
+    p.style.padding = "5px 10px"
+    return p
+  }
+
+  private formatHead = (head: HTMLDivElement): void => {
+    head.textContent = "<<<<<<< HEAD"
+    const { color, backgroundDark } = mergeSectionThemes[ConflictIdentity.CURRENT]
+    head.style.color = color
+    head.style.background = backgroundDark
+  }
+
+  private createMiddle = (clickHandler: ClickHandler, createUnconflictedFrom: (content?: Fragment, conflictInfo?: UnconflictedAttrs) => Node): HTMLDivElement => {
+    const middle = this.createPartitioner()
+
+    middle.title = "Accept Both"
+    middle.textContent = "======="
+
+    const bothTheme = mergeSectionThemes[ConflictIdentity.BOTH]
+    middle.style.color = bothTheme.color
+    middle.style.background = bothTheme.backgroundDark
+
+    middle.addEventListener("click", () => {
+      clickHandler((self, parent) => {
+        const attrs = { originalConflict: parent, chosenIdentity: ConflictIdentity.BOTH }
+        return createUnconflictedFrom(Fragment.fromArray([
+          createUnconflictedFrom(parent.firstChild?.content),
+          createUnconflictedFrom(self.content),
+        ]), attrs)
+      })
+    })
+
+    return middle
+  }
+
+  private formatTail = (tail: HTMLDivElement): void => {
+    tail.textContent = `>>>>>>>`
+    const { color, backgroundDark } = mergeSectionThemes[ConflictIdentity.INCOMING]
+    tail.style.color = color
+    tail.style.background = backgroundDark
+  }
+
+  private advanceToNextConflict = (): boolean => {
+    const pieces = window.location.href.split("#")
+    if (pieces.length == 2) {
+      const matches = /^conflict([0-9])+$/g.exec(pieces[1])
+      if (matches) {
+        const next = +matches[1] + 1
+        window.location.href = pieces[0] + `#conflict${next}`
+        return true
+      }
+    }
+    return false
+  }
+
 }
+
+export default MergeSection

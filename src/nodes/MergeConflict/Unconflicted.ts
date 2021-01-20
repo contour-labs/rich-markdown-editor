@@ -1,11 +1,13 @@
 import { NodeSpec, Node } from "prosemirror-model";
 import NodeWithNodeView from "../NodeWithNodeView";
 import { NodeViewConstructor } from "../..";
-import { NodeView } from "prosemirror-view";
+import { NodeView, EditorView } from "prosemirror-view";
 import { mergeSectionThemes } from "./MergeSection";
 import { MarkdownSerializerState } from "prosemirror-markdown";
 
-export default class Unconflicted extends NodeWithNodeView {
+const passiveOpacity = "66"
+
+class Unconflicted extends NodeWithNodeView {
 
   get name() {
     return "unconflicted";
@@ -28,8 +30,6 @@ export default class Unconflicted extends NodeWithNodeView {
 
   get nodeViewConstructor(): NodeViewConstructor {
     return (node, view, getPos): NodeView => {
-      const { originalConflict, chosenIdentity } = node.attrs
-
       const dom = document.createElement('div')
       dom.style.display = 'flex'
       dom.style.flexDirection = "column"
@@ -37,24 +37,8 @@ export default class Unconflicted extends NodeWithNodeView {
       const contentDOM = document.createElement('div')
       contentDOM.style.flex = '1'
 
-      if (originalConflict && typeof getPos === "function") {
-        dom.title = "Unresolve"
-        const { backgroundLight: active } = mergeSectionThemes[chosenIdentity]
-        const passive = active + "66"
-        dom.addEventListener("pointerenter", () => {
-          dom.style.background = active
-        })
-        dom.addEventListener("pointerleave", () => {
-          dom.style.background = passive
-        })
-        dom.style.background = passive
-        dom.style.transition = "300ms ease all"
-        dom.style.cursor = "pointer"
-        dom.addEventListener("click", () => {
-          const pos = getPos()
-          view.state.doc.attrs.conflictCount += 1
-          view.dispatch(view.state.tr.replaceRangeWith(pos, pos + node.nodeSize, originalConflict))
-        })
+      if (node.attrs.originalConflict && typeof getPos === "function") {
+        this.makeAbleToUnresolve(dom, node, view, getPos)
       }
 
       dom.appendChild(contentDOM)
@@ -63,8 +47,31 @@ export default class Unconflicted extends NodeWithNodeView {
     }
   }
 
+  private makeAbleToUnresolve = (dom: HTMLDivElement, node: Node, view: EditorView, getPos: () => number): void => {
+    const { originalConflict, chosenIdentity } = node.attrs
+
+    dom.title = "Unresolve"
+    dom.style.transition = "300ms ease all"
+    dom.style.cursor = "pointer"
+
+    const { backgroundLight: active } = mergeSectionThemes[chosenIdentity]
+    const passive = active + passiveOpacity
+
+    dom.style.background = passive
+
+    dom.addEventListener("pointerenter", () => dom.style.background = active)
+    dom.addEventListener("pointerleave", () => dom.style.background = passive)
+    dom.addEventListener("click", () => {
+      const pos = getPos()
+      view.state.doc.attrs.conflictCount += 1
+      view.dispatch(view.state.tr.replaceRangeWith(pos, pos + node.nodeSize, originalConflict))
+    })
+  }
+
   toMarkdown(state: MarkdownSerializerState, node: Node) {
     state.renderContent(node)
   }
 
 }
+
+export default Unconflicted
