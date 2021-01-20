@@ -86,7 +86,7 @@ export type Props = {
   uploadImage?: (file: File) => Promise<string>;
   onSave?: ({ done: boolean }) => void;
   onCancel?: () => void;
-  onChange: (value: () => string) => void;
+  onChange: (value: () => string, readonly: boolean | undefined) => void;
   onImageUploadStart?: () => void;
   onImageUploadStop?: () => void;
   onCreateLink?: (title: string) => Promise<string>;
@@ -154,6 +154,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
 
   componentDidMount() {
     this.init();
+    this.handleChange()
     this.scrollToAnchor();
 
     if (this.props.readOnly) return;
@@ -415,10 +416,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     if (!this.view.state.doc.attrs.conflictCount) {
       console.log(this.value())
     }
-    if (this.props.onChange && !this.props.readOnly) {
-      this.props.onChange(() => {
-        return this.value();
-      });
+    if (this.props.onChange) {
+      this.props.onChange(this.value, this.props.readOnly);
     }
   };
 
