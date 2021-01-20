@@ -23,6 +23,9 @@ export default class MergeConflict extends NodeWithNodeView {
       attrs: {
         conflictId: {
           default: undefined
+        },
+        commitHash: {
+          default: undefined
         }
       }
     }

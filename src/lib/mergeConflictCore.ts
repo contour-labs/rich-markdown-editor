@@ -1,6 +1,10 @@
+import { ConflictIdentity } from "../nodes/MergeConflict/MergeConflict";
+import { Fragment, NodeType, Node } from "prosemirror-model";
+import { MarkdownParser } from "prosemirror-markdown";
+
 export enum Resolution {
-  Mine,
-  Theirs,
+  Current,
+  Incoming,
   Both
 }
 
@@ -9,13 +13,22 @@ export type Opt<T> = T | undefined
 export interface MergeConflict {
   startIndex: number,
   endIndex: number
-  mine: string
-  theirs: string
-  tail: string
+  current: string
+  incoming: string
+  commitHash: string
 }
 
-export const parseConflicts = (fileContents: string): { partitions: (MergeConflict | string)[], conflictCount: number } | false => {
-  const conflictSeeker = /<<<<<<< HEAD\n([\s\S]+?(?=\n=======))\n=======\n([\s\S]+?(?=\n>>>>>>> [a-z0-9]+\n))(\n>>>>>>> [a-z0-9]+\n)/g
+type NodeDict = { [name: string]: NodeType }
+
+type Partition = MergeConflict | string
+
+interface RegexParseResults {
+  partitions: Partition[],
+  conflictCount: number
+}
+
+export const regexParseConflicts = (fileContents: string): RegexParseResults | false => {
+  const conflictSeeker = /<<<<<<< HEAD\n([\s\S]+?(?=\n=======))\n=======\n([\s\S]+?(?=\n>>>>>>> [a-z0-9]+\n))\n>>>>>>> ([a-z0-9]+\n)/g
   const partitions: (MergeConflict | string)[] = []
   let matches: RegExpExecArray | null;
   let conflictCount = 0
@@ -23,11 +36,11 @@ export const parseConflicts = (fileContents: string): { partitions: (MergeConfli
   while ((matches = conflictSeeker.exec(fileContents)) != null) {
     conflictCount += 1
 
-    const [fullMatch, mine, theirs, tail] = matches
+    const [fullMatch, current, incoming, commitHash] = matches
     const startIndex = matches.index
     const endIndex = startIndex + fullMatch.length
 
-    // Everything (unconflicted portion of document) lying between either the start of the document and
+    // Everything (unconflicted partition of document) lying between either the start of the document and
     // the first conflict or the end of the previous conflict and the start the current one
     const intermediateStartIndex = !partitions.length ? 0 : (partitions[partitions.length - 1] as MergeConflict).endIndex
     const intermediateEndIndex = startIndex
@@ -35,7 +48,7 @@ export const parseConflicts = (fileContents: string): { partitions: (MergeConfli
       partitions.push(fileContents.slice(intermediateStartIndex, intermediateEndIndex))
     }
 
-    partitions.push({ mine, theirs, startIndex, endIndex, tail })
+    partitions.push({ current, incoming, startIndex, endIndex, commitHash })
   }
 
   if (partitions.length) {
@@ -50,25 +63,62 @@ export const parseConflicts = (fileContents: string): { partitions: (MergeConfli
   return { partitions, conflictCount }
 }
 
+export const documentWithConflicts = (markdownParser: MarkdownParser, results: RegexParseResults, nodeDict: NodeDict): Node => {
+  const { partitions, conflictCount } = results
+  const { doc, unconflicted, merge_conflict, merge_section } = nodeDict
+
+  let conflictId = 0
+
+  const partitionToNode = (partition: Partition): Node => {
+    if (typeof partition === "string") {
+      return unconflicted.create({}, markdownParser.parse(partition).content)
+    }
+    const { current, incoming, commitHash } = partition
+
+    const mergeConflict = merge_conflict.create(
+      { conflictId, commitHash },
+      Fragment.fromArray([
+        merge_section.create(
+          { identity: ConflictIdentity.CURRENT, conflictId, commitHash },
+          markdownParser.parse(current).content
+        ),
+        merge_section.create(
+          { identity: ConflictIdentity.INCOMING, conflictId, commitHash },
+          markdownParser.parse(incoming).content
+        )
+      ])
+    )
+
+    conflictId += 1
+
+    return mergeConflict
+  }
+
+  return doc.create(
+    { conflictCount },
+    Fragment.fromArray(partitions.map(partitionToNode))
+  )
+}
+
 export const resolveConflict = (contents: string, conflictsSlice: MergeConflict[], resolution: Resolution): string => {
-  const { mine, theirs, startIndex, endIndex } = conflictsSlice[0]
+  const { current, incoming, startIndex, endIndex } = conflictsSlice[0]
 
   let resolvedContent: string
   switch (resolution) {
-    case Resolution.Mine:
-      resolvedContent = mine
+    case Resolution.Current:
+      resolvedContent = current
       break
-    case Resolution.Theirs:
-      resolvedContent = theirs
+    case Resolution.Incoming:
+      resolvedContent = incoming
       break
     case Resolution.Both:
-      resolvedContent = mine + theirs
+      resolvedContent = current + incoming
       break
   }
 
   const output = contents.slice(0, startIndex) + resolvedContent + contents.slice(endIndex)
 
-  // When a subset of the entire conflict match (mine, theirs or both) replaces the entire conflict match, the old indices
+  // When a subset of the entire conflict match (current, incoming or both) replaces the entire conflict match, the old indices
   // found in the regex passes *for subsequent conflicts* will be too large since the content that precedes it is
   // now shorted. Correct this by subtracting the difference between the entire conflict match and the replacement
   // from all of the subsequent indices, if any.

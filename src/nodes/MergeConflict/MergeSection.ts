@@ -39,6 +39,9 @@ export default class MergeSection extends NodeWithNodeView {
         },
         conflictId: {
           default: undefined
+        },
+        commitHash: {
+          default: undefined
         }
       }
     };
@@ -46,7 +49,7 @@ export default class MergeSection extends NodeWithNodeView {
 
   get nodeViewConstructor(): NodeViewConstructor {
     return (node, view): NodeView => {
-      const { identity } = node.attrs
+      const { identity, conflictId, commitHash } = node.attrs
 
       const dom = document.createElement('div')
       dom.style.display = 'flex'
@@ -77,7 +80,7 @@ export default class MergeSection extends NodeWithNodeView {
         view.state.doc.attrs.conflictCount -= 1
         view.state.doc.descendants((parentCandidate, pos) => {
           const { type, attrs } = parentCandidate
-          if (type.name === "merge_conflict" && attrs.conflictId === node.attrs.conflictId) {
+          if (type.name === "merge_conflict" && attrs.conflictId === conflictId) {
             const conflicted = generateUnconflicted(node, parentCandidate)
             view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, conflicted))
           }
@@ -130,7 +133,7 @@ export default class MergeSection extends NodeWithNodeView {
         // Then, render the markdown child content
         acceptWrapper.append(contentDOM)
         // Finally, initialize and render the trailing ">>>>>>>" panel
-        labelledMargin.textContent = ">>>>>>>"
+        labelledMargin.textContent = `>>>>>>> ${commitHash}`
         const incomingTheme = mergeSectionThemes[ConflictIdentity.INCOMING]
         labelledMargin.style.color = incomingTheme.color
         labelledMargin.style.background = incomingTheme.backgroundDark

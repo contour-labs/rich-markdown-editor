@@ -61,8 +61,8 @@ import Placeholder from "./plugins/Placeholder";
 import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
-import { parseConflicts } from "./lib/mergeConflictCore";
-import MergeConflict, { ConflictIdentity } from "./nodes/MergeConflict/MergeConflict";
+import { regexParseConflicts as regexParseConflicts, documentWithConflicts } from "./lib/mergeConflictCore";
+import MergeConflict from "./nodes/MergeConflict/MergeConflict";
 import MergeSection from "./nodes/MergeConflict/MergeSection";
 import Unconflicted from "./nodes/MergeConflict/Unconflicted";
 
@@ -352,49 +352,15 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  createDocument(content: string) {
-    const parseResults = parseConflicts(content)
-    if (parseResults === false) {
-      return this.parser.parse(content)
+  createDocument(content: string): ProsemirrorNode {
+    const results = regexParseConflicts(content)
+    if (results !== false) {
+      return documentWithConflicts(this.parser, results, this.schema.nodes)
     }
-    const { partitions, conflictCount } = parseResults
-    let conflictId = 0
-    return this.schema.nodes.doc.create(
-      { conflictCount },
-      Fragment.fromArray(partitions.map(portion => {
-        if (typeof portion === "string") {
-          return this.schema.nodes.unconflicted.create(
-            {},
-            this.parser.parse(portion).content
-          )
-        } else {
-          const mergeConflict = this.schema.nodes.merge_conflict.create(
-            { conflictId },
-            Fragment.fromArray([
-              this.schema.nodes.merge_section.create(
-                {
-                  identity: ConflictIdentity.CURRENT,
-                  conflictId
-                },
-                this.parser.parse(portion.mine).content
-              ),
-              this.schema.nodes.merge_section.create(
-                {
-                  identity: ConflictIdentity.INCOMING,
-                  conflictId
-                },
-                this.parser.parse(portion.theirs).content
-              )
-            ])
-          )
-          conflictId += 1
-          return mergeConflict
-        }
-      }))
-    )
+    return this.parser.parse(content)
   }
 
-  createView() {
+  createView(): EditorView {
     if (!this.element) {
       throw new Error("createView called before ref available");
     }
