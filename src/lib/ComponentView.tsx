@@ -2,28 +2,17 @@ import * as React from "react";
 import ReactDOM from "react-dom";
 import { ThemeProvider } from "styled-components";
 import { EditorView, Decoration, NodeView } from "prosemirror-view";
-import Extension from "../lib/Extension";
 import { light as lightTheme, dark as darkTheme } from "../theme";
 import Editor from "../";
 import { Node } from "prosemirror-model"
-import ReactNode from "../nodes/CustomRender/ReactNode";
+import { NodeViewProps } from "../nodes/CustomRender/NodeViewNode";
 
-interface CommonOptions {
+export interface ComponentOptions {
   node: Node
   getPos: boolean | (() => number)
-}
-
-export interface ComponentOptions extends CommonOptions {
   theme: typeof lightTheme
   isSelected: boolean
   isEditable: boolean
-}
-
-export interface ComponentViewOptions extends CommonOptions {
-  extension: ReactNode
-  editor: Editor
-  view: EditorView
-  decorations: Decoration[]
 }
 
 export type Component = (options: ComponentOptions) => React.ReactElement;
@@ -32,7 +21,6 @@ export default class ComponentView implements NodeView {
   component: Component;
 
   editor: Editor;
-  extension: Extension;
   node: Node;
   view: EditorView;
   getPos: boolean | (() => number);
@@ -42,10 +30,9 @@ export default class ComponentView implements NodeView {
   dom: HTMLElement | null;
 
   // See https://prosemirror.net/docs/ref/#view.NodeView
-  constructor(component: Component, { editor, extension, node, view, getPos, decorations }: ComponentViewOptions) {
+  constructor(component: Component, { node, view, getPos, decorations, editor }: NodeViewProps) {
     this.component = component;
     this.editor = editor;
-    this.extension = extension;
     this.getPos = getPos;
     this.decorations = decorations;
     this.node = node;

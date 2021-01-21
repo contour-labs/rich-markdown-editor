@@ -1,7 +1,6 @@
 import { NodeSpec, Fragment, Node } from "prosemirror-model";
-import NodeWithNodeView from "../CustomRender/NodeViewNode";
+import NodeViewNode, { NodeViewProps } from "../NodeViewNode";
 import { NodeView } from "prosemirror-view";
-import { NodeViewConstructor } from "../..";
 import { ConflictIdentity } from "./MergeConflict";
 import { MarkdownSerializerState } from "prosemirror-markdown";
 
@@ -36,7 +35,7 @@ interface UnconflictedAttrs {
 
 type ClickHandler = (generateUnconflicted: (self: Node, parent: Node) => Node) => void
 
-class MergeSection extends NodeWithNodeView {
+class MergeSection extends NodeViewNode {
 
   get name(): string {
     return "merge_section";
@@ -61,65 +60,63 @@ class MergeSection extends NodeWithNodeView {
     };
   }
 
-  get nodeViewConstructor(): NodeViewConstructor {
-    return (node, view): NodeView => {
-      const { identity, conflictId } = node.attrs
+  getNodeView({ node, view }: NodeViewProps): NodeView {
+    const { identity, conflictId } = node.attrs
 
-      const dom = document.createElement('div')
-      dom.style.display = 'flex'
-      dom.style.flexDirection = "column"
+    const dom = document.createElement('div')
+    dom.style.display = 'flex'
+    dom.style.flexDirection = "column"
 
-      const contentDOM = document.createElement('div')
-      contentDOM.style.flex = '1'
-      contentDOM.style.padding = "5px 10px"
-      contentDOM.style.background = mergeSectionThemes[identity].backgroundLight
+    const contentDOM = document.createElement('div')
+    contentDOM.style.flex = '1'
+    contentDOM.style.padding = "5px 10px"
+    contentDOM.style.background = mergeSectionThemes[identity].backgroundLight
 
-      const handler = (generateUnconflicted: (self: Node, parent: Node) => Node): void => {
-        view.state.doc.attrs.conflictCount -= 1
-        view.state.doc.descendants((parentCandidate, pos) => {
-          const { type, attrs } = parentCandidate
-          if (type.name === "merge_conflict" && attrs.conflictId === conflictId) {
-            const unconflicted = generateUnconflicted(node, parentCandidate)
-            view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, unconflicted))
-          }
-        })
-      }
-
-      const createUnconflictedFrom = (content?: Fragment, conflictInfo?: UnconflictedAttrs): Node => {
-        return view.state.schema.nodes.unconflicted.create(conflictInfo, content)
-      }
-
-      // This is an initially generic partitioner, but will be initialized
-      // as either a head or a tail depending on this node's attributes
-      const partitioner = this.createPartitioner()
-
-      const clickContainer = document.createElement("div")
-      clickContainer.title = `Accept ${identity}`
-      clickContainer.style.cursor = "pointer"
-      clickContainer.addEventListener("click", () => handler((self, parent) => {
-        return createUnconflictedFrom(self.content, {
-          originalConflict: parent,
-          chosenIdentity: identity
-        })
-      }))
-
-      if (identity === ConflictIdentity.CURRENT) {
-        this.formatHead(partitioner)
-        clickContainer.appendChild(partitioner)
-        clickContainer.appendChild(contentDOM)
-      } else {
-        this.formatTail(partitioner)
-        // The middle partitioner is arbitrarily placed above the tail, but
-        // it could just as easily be below the head
-        dom.appendChild(this.createMiddle(handler, createUnconflictedFrom))
-        clickContainer.appendChild(contentDOM)
-        clickContainer.appendChild(partitioner)
-      }
-
-      dom.appendChild(clickContainer)
-
-      return { dom, contentDOM }
+    const handler = (generateUnconflicted: (self: Node, parent: Node) => Node): void => {
+      view.state.doc.attrs.conflictCount -= 1
+      view.state.doc.descendants((parentCandidate, pos) => {
+        const { type, attrs } = parentCandidate
+        if (type.name === "merge_conflict" && attrs.conflictId === conflictId) {
+          const unconflicted = generateUnconflicted(node, parentCandidate)
+          view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, unconflicted))
+        }
+      })
     }
+
+    const createUnconflictedFrom = (content?: Fragment, conflictInfo?: UnconflictedAttrs): Node => {
+      return view.state.schema.nodes.unconflicted.create(conflictInfo, content)
+    }
+
+    // This is an initially generic partitioner, but will be initialized
+    // as either a head or a tail depending on this node's attributes
+    const partitioner = this.createPartitioner()
+
+    const clickContainer = document.createElement("div")
+    clickContainer.title = `Accept ${identity}`
+    clickContainer.style.cursor = "pointer"
+    clickContainer.addEventListener("click", () => handler((self, parent) => {
+      return createUnconflictedFrom(self.content, {
+        originalConflict: parent,
+        chosenIdentity: identity
+      })
+    }))
+
+    if (identity === ConflictIdentity.CURRENT) {
+      this.formatHead(partitioner)
+      clickContainer.appendChild(partitioner)
+      clickContainer.appendChild(contentDOM)
+    } else {
+      this.formatTail(partitioner)
+      // The middle partitioner is arbitrarily placed above the tail, but
+      // it could just as easily be below the head
+      dom.appendChild(this.createMiddle(handler, createUnconflictedFrom))
+      clickContainer.appendChild(contentDOM)
+      clickContainer.appendChild(partitioner)
+    }
+
+    dom.appendChild(clickContainer)
+
+    return { dom, contentDOM }
   }
 
   private createPartitioner = (): HTMLParagraphElement => {

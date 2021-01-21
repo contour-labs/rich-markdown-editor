@@ -1,8 +1,41 @@
 import LocalNode from "../LocalNode"
-import { NodeViewConstructor } from "../.."
+import RichMarkdownEditor from "../.."
+import { NodeView, EditorView, Decoration } from "prosemirror-view"
+import { Node } from "prosemirror-model"
 
-export default abstract class NodeWithNodeView extends LocalNode {
+export default abstract class NodeViewNode extends LocalNode {
 
-  abstract get nodeViewConstructor(): NodeViewConstructor;
+  nodeViewConstructor(extensionProps: NodeViewExtensionProps): NodeViewConstructor {
+    return (
+      node: Node,
+      view: EditorView,
+      getPos: (() => number) | boolean,
+      decorations: Decoration[]
+    ) => {
+      return this.getNodeView({ node, view, getPos, decorations, ...extensionProps })
+    }
+  }
+
+  abstract getNodeView(props: NodeViewProps): NodeView;
 
 }
+
+export type NodeViewConstructor = (
+  node: Node,
+  view: EditorView,
+  getPos: (() => number) | boolean,
+  decorations: Decoration[]
+) => NodeView
+
+export interface NodeViewCoreProps {
+  node: Node
+  view: EditorView
+  getPos: (() => number) | boolean
+  decorations: Decoration[]
+}
+
+export interface NodeViewExtensionProps {
+  editor: RichMarkdownEditor
+}
+
+export type NodeViewProps = NodeViewCoreProps & NodeViewExtensionProps

@@ -1,13 +1,12 @@
 import { NodeSpec, Node } from "prosemirror-model";
-import NodeWithNodeView from "../CustomRender/NodeViewNode";
-import { NodeViewConstructor } from "../..";
+import NodeViewNode, { NodeViewProps } from "../NodeViewNode";
 import { NodeView, EditorView } from "prosemirror-view";
 import { mergeSectionThemes } from "./MergeSection";
 import { MarkdownSerializerState } from "prosemirror-markdown";
 
 const passiveOpacity = "66"
 
-class Unconflicted extends NodeWithNodeView {
+class Unconflicted extends NodeViewNode {
 
   get name(): string {
     return "unconflicted";
@@ -28,25 +27,23 @@ class Unconflicted extends NodeWithNodeView {
     };
   }
 
-  get nodeViewConstructor(): NodeViewConstructor {
-    return (node, view, getPos): NodeView => {
-      const dom = document.createElement('div')
-      dom.className = "unconflictedDOM"
-      dom.style.display = 'flex'
-      dom.style.flexDirection = "column"
+  getNodeView({ node, view, getPos }: NodeViewProps): NodeView {
+    const dom = document.createElement('div')
+    dom.className = "unconflictedDOM"
+    dom.style.display = 'flex'
+    dom.style.flexDirection = "column"
 
-      const contentDOM = document.createElement('div')
-      contentDOM.className = "unconflictedContentDOM"
-      contentDOM.style.flex = '1'
+    const contentDOM = document.createElement('div')
+    contentDOM.className = "unconflictedContentDOM"
+    contentDOM.style.flex = '1'
 
-      if (node.attrs.originalConflict && typeof getPos === "function") {
-        this.makeAbleToUnresolve(dom, node, view, getPos)
-      }
-
-      dom.appendChild(contentDOM)
-
-      return { dom, contentDOM }
+    if (node.attrs.originalConflict && typeof getPos === "function") {
+      this.makeAbleToUnresolve(dom, node, view, getPos)
     }
+
+    dom.appendChild(contentDOM)
+
+    return { dom, contentDOM }
   }
 
   private makeAbleToUnresolve = (dom: HTMLDivElement, node: Node, view: EditorView, getPos: () => number): void => {

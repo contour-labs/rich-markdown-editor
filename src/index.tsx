@@ -24,7 +24,7 @@ import ExtensionManager from "./lib/ExtensionManager";
 import headingToSlug from "./lib/headingToSlug";
 
 // nodes
-import NodeWithNodeView from "./nodes/CustomRender/NodeViewNode";
+import NodeViewNode, { NodeViewConstructor } from "./nodes/CustomRender/NodeViewNode";
 import Doc from "./nodes/Doc";
 import Text from "./nodes/Text";
 import Blockquote from "./nodes/Blockquote";
@@ -62,9 +62,9 @@ import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
 import { regexParseConflicts as regexParseConflicts, documentWithConflicts } from "./lib/mergeConflictCore";
-import MergeConflict from "./nodes/MergeConflict/MergeConflict";
-import MergeSection from "./nodes/MergeConflict/MergeSection";
-import Unconflicted from "./nodes/MergeConflict/Unconflicted";
+import MergeConflict from "./nodes/CustomRender/MergeConflict/MergeConflict";
+import MergeSection from "./nodes/CustomRender/MergeConflict/MergeSection";
+import Unconflicted from "./nodes/CustomRender/MergeConflict/Unconflicted";
 import ReactNode from "./nodes/CustomRender/ReactNode";
 import ComponentView from "./lib/ComponentView";
 
@@ -108,13 +108,6 @@ type State = {
   linkMenuOpen: boolean;
   blockMenuSearch: string;
 };
-
-export type NodeViewConstructor = (
-  node: Node,
-  view: EditorView,
-  getPos: (() => number) | boolean,
-  decorations: Decoration[]
-) => NodeView
 
 class RichMarkdownEditor extends React.PureComponent<Props, State> {
   static defaultProps = {
@@ -295,19 +288,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   createNodeViews(): Record<string, NodeViewConstructor> {
     return this.extensions.extensions
       .reduce((nodeViewConstructors, extension) => {
-        if (extension instanceof NodeWithNodeView) {
-          nodeViewConstructors[extension.name] = extension.nodeViewConstructor
-        } else if (extension instanceof ReactNode) {
-          nodeViewConstructors[extension.name] = (node, view, getPos, decorations) => {
-            return new ComponentView(extension.component, {
-              editor: this,
-              extension,
-              node,
-              view,
-              getPos,
-              decorations,
-            });
-          };
+        if (extension instanceof NodeViewNode) {
+          nodeViewConstructors[extension.name] = extension.nodeViewConstructor({
+            editor: this
+          })
         }
         return nodeViewConstructors
       }, {} as Record<string, NodeViewConstructor>);

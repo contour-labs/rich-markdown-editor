@@ -1,6 +1,5 @@
 import { NodeSpec, Node } from "prosemirror-model";
-import NodeViewNode from "../CustomRender/NodeViewNode";
-import { NodeViewConstructor } from "../../index"
+import NodeViewNode, { NodeViewProps } from "../NodeViewNode";
 import { NodeView } from "prosemirror-view";
 import { MarkdownSerializerState } from "prosemirror-markdown";
 
@@ -32,24 +31,22 @@ class MergeConflict extends NodeViewNode {
     }
   }
 
-  get nodeViewConstructor(): NodeViewConstructor {
-    return (node): NodeView => {
-      const dom = document.createElement('section')
-      dom.style.display = 'flex'
+  getNodeView({ node }: NodeViewProps): NodeView {
+    const dom = document.createElement('section')
+    dom.style.display = 'flex'
 
-      const locator = document.createElement("a")
-      locator.id = `conflict${node.attrs.conflictId}`
-      dom.appendChild(locator)
+    const locator = document.createElement("a")
+    locator.id = `conflict${node.attrs.conflictId}`
+    dom.appendChild(locator)
 
-      const contentDOM = document.createElement('div')
-      contentDOM.style.flex = '1'
-      contentDOM.style.border = "1px solid #ebebeb"
-      contentDOM.style.margin = "10px 0";
+    const contentDOM = document.createElement('div')
+    contentDOM.style.flex = '1'
+    contentDOM.style.border = "1px solid #ebebeb"
+    contentDOM.style.margin = "10px 0";
 
-      dom.appendChild(contentDOM)
+    dom.appendChild(contentDOM)
 
-      return { dom, contentDOM }
-    }
+    return { dom, contentDOM }
   }
 
   toMarkdown(_state: MarkdownSerializerState, _node: Node): void {

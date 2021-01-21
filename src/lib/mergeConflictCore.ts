@@ -1,4 +1,4 @@
-import { ConflictIdentity } from "../nodes/MergeConflict/MergeConflict";
+import { ConflictIdentity } from "../nodes/CustomRender/MergeConflict/MergeConflict";
 import { Fragment, NodeType, Node } from "prosemirror-model";
 import { MarkdownParser } from "prosemirror-markdown";
 
