@@ -1,13 +1,18 @@
 import { toggleMark } from "prosemirror-commands";
 import markInputRule from "../lib/markInputRule";
-import Mark from "./Mark";
+import LocalMark, { MarkInformation } from "./LocalMark";
+import { MarkSpec, MarkType } from "prosemirror-model";
+import { ExtensionOptions } from "../lib/Extension";
+import { InputRule } from "prosemirror-inputrules";
+import { TokenConfig } from "prosemirror-markdown";
 
-export default class Strikethrough extends Mark {
-  get name() {
+export default class Strikethrough extends LocalMark {
+
+  get name(): string {
     return "strikethrough";
   }
 
-  get schema() {
+  get schema(): MarkSpec {
     return {
       parseDOM: [
         {
@@ -24,17 +29,17 @@ export default class Strikethrough extends Mark {
     };
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Mod-d": toggleMark(type),
+      "Mod-d": toggleMark(type as MarkType),
     };
   }
 
-  inputRules({ type }) {
-    return [markInputRule(/~([^~]+)~$/, type)];
+  inputRules({ type }: ExtensionOptions): InputRule[] {
+    return [markInputRule(/~([^~]+)~$/, type as MarkType)];
   }
 
-  get toMarkdown() {
+  get toMarkdown(): MarkInformation {
     return {
       open: "~~",
       close: "~~",
@@ -43,11 +48,12 @@ export default class Strikethrough extends Mark {
     };
   }
 
-  get markdownToken() {
+  get markdownToken(): string {
     return "s";
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { mark: "strikethrough" };
   }
+
 }

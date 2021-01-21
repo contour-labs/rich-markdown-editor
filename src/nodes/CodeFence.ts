@@ -14,11 +14,14 @@ import ruby from "refractor/lang/ruby";
 import typescript from "refractor/lang/typescript";
 
 import { setBlockType } from "prosemirror-commands";
-import { textblockTypeInputRule } from "prosemirror-inputrules";
+import { textblockTypeInputRule, InputRule } from "prosemirror-inputrules";
 import copy from "copy-to-clipboard";
 import Prism, { LANGUAGES } from "../plugins/Prism";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
+import LocalNode from "./LocalNode";
+import { NodeSpec, NodeType, Node } from "prosemirror-model";
+import { ExtensionOptions, Command } from "../lib/Extension";
+import { Plugin } from "prosemirror-state";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
 [
   bash,
@@ -36,12 +39,13 @@ import { NodeSpec } from "prosemirror-model";
   typescript,
 ].forEach(refractor.register);
 
-export default class CodeFence extends Node {
-  get languageOptions() {
+export default class CodeFence extends LocalNode {
+
+  get languageOptions(): [string, string][] {
     return Object.entries(LANGUAGES);
   }
 
-  get name() {
+  get name(): string {
     return "code_fence";
   }
 
@@ -87,17 +91,17 @@ export default class CodeFence extends Node {
     };
   }
 
-  commands({ type }) {
-    return () => setBlockType(type);
+  commands({ type }: ExtensionOptions): Record<string, Command> | Command {
+    return () => setBlockType(type as NodeType);
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Shift-Ctrl-\\": setBlockType(type),
+      "Shift-Ctrl-\\": setBlockType(type as NodeType),
     };
   }
 
-  handleCopyToClipboard(node) {
+  handleCopyToClipboard(node: Node) {
     return () => {
       copy(node.textContent);
       if (this.options.onShowToast) {
@@ -106,10 +110,10 @@ export default class CodeFence extends Node {
     };
   }
 
-  handleLanguageChange = event => {
+  handleLanguageChange = (event: Event) => {
     const { view } = this.editor;
     const { tr } = view.state;
-    const element = event.target;
+    const element = event.target as HTMLSelectElement;
     const { top, left } = element.getBoundingClientRect();
     const result = view.posAtCoords({ top, left });
 
@@ -121,7 +125,7 @@ export default class CodeFence extends Node {
     }
   };
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [
       Prism({
         name: this.name,
@@ -130,11 +134,11 @@ export default class CodeFence extends Node {
     ];
   }
 
-  inputRules({ type }) {
-    return [textblockTypeInputRule(/^```$/, type)];
+  inputRules({ type }: ExtensionOptions): InputRule[] {
+    return [textblockTypeInputRule(/^```$/, type as NodeType)];
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.write("```" + (node.attrs.language || "") + "\n");
     state.text(node.textContent, false);
     state.ensureNewLine();
@@ -142,14 +146,15 @@ export default class CodeFence extends Node {
     state.closeBlock(node);
   }
 
-  get markdownToken() {
+  get markdownToken(): string {
     return "fence";
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       block: "code_block",
       getAttrs: tok => ({ language: tok.info }),
     };
   }
+
 }

@@ -5,12 +5,14 @@ import {
   isRowSelected,
   getCellsInColumn,
 } from "prosemirror-utils";
-import Node from "./Node";
+import LocalNode from "./LocalNode";
 import Token = require("markdown-it/lib/token");
-import { NodeSpec } from "prosemirror-model";
+import { NodeSpec, Node } from "prosemirror-model";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class TableCell extends Node {
-  get name() {
+export default class TableCell extends LocalNode {
+
+  get name(): string {
     return "td";
   }
 
@@ -37,18 +39,18 @@ export default class TableCell extends Node {
     };
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.renderContent(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       block: "td",
       getAttrs: (token: Token) => ({ alignment: token.info }),
     };
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [
       new Plugin({
         props: {
@@ -108,4 +110,5 @@ export default class TableCell extends Node {
       }),
     ];
   }
+
 }

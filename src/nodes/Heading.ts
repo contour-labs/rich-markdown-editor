@@ -1,22 +1,23 @@
 import { Plugin } from "prosemirror-state";
 import copy from "copy-to-clipboard";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import { Node as ProsemirrorNode, NodeType, NodeSpec } from "prosemirror-model";
-import { textblockTypeInputRule } from "prosemirror-inputrules";
+import { Node, NodeType, NodeSpec } from "prosemirror-model";
+import { textblockTypeInputRule, InputRule } from "prosemirror-inputrules";
 import { setBlockType } from "prosemirror-commands";
 import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 import backspaceToParagraph from "../commands/backspaceToParagraph";
 import toggleBlockType from "../commands/toggleBlockType";
 import headingToSlug from "../lib/headingToSlug";
-import Node from "./Node";
-import Token from "markdown-it/lib/token";
+import LocalNode from "./LocalNode";
+import { ExtensionOptions, Command } from "../lib/Extension";
 
-export default class Heading extends Node {
-  get name() {
+export default class Heading extends LocalNode {
+
+  get name(): string {
     return "heading";
   }
 
-  get defaultOptions() {
+  get defaultOptions(): any {
     return {
       levels: [1, 2, 3, 4],
     };
@@ -37,8 +38,8 @@ export default class Heading extends Node {
         tag: `h${level}`,
         attrs: { level },
       })),
-      toDOM: (node: ProsemirrorNode) => {
-        const { level, conflictIdentity } = node.attrs
+      toDOM: node => {
+        const { level } = node.attrs
 
         const button = document.createElement("button");
         button.innerText = "#";
@@ -55,32 +56,30 @@ export default class Heading extends Node {
     };
   }
 
-  toMarkdown(state: MarkdownSerializerState, node: ProsemirrorNode) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.write(state.repeat("#", node.attrs.level) + " ");
     state.renderInline(node);
     state.closeBlock(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       block: "heading",
-      getAttrs: (token: Token): Record<string, any> => ({
-        level: +token.tag.slice(1),
-      }),
-    } as TokenConfig;
+      getAttrs(token): Record<string, any> {
+        return { level: +token.tag.slice(1) }
+      }
+    }
   }
 
-  commands({ type, schema }) {
-    return (attrs: Record<string, any>) => {
-      return toggleBlockType(type, schema.nodes.paragraph, attrs);
-    };
+  commands({ type, schema }: ExtensionOptions): Record<string, Command> | Command {
+    return attrs => toggleBlockType(type, schema.nodes.paragraph, attrs);
   }
 
-  handleCopyLink = () => {
+  handleCopyLink = (): (event: Event) => void => {
     return event => {
       // this is unfortunate but appears to be the best way to grab the anchor
       // as it's added directly to the dom by a decoration.
-      const hash = `#${event.target.parentElement.parentElement.id}`;
+      const hash = `#${(event.target as HTMLButtonElement)!.parentElement!.parentElement!.id}`;
 
       // the existing url might contain a hash already, lets make sure to remove
       // that rather than appending another one.
@@ -93,12 +92,12 @@ export default class Heading extends Node {
     };
   };
 
-  keys({ type }: { type: NodeType }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     const options = this.options.levels.reduce(
-      (items, level) => ({
+      (items: Record<string, any>, level: number) => ({
         ...items,
         ...{
-          [`Shift-Ctrl-${level}`]: setBlockType(type, { level }),
+          [`Shift-Ctrl-${level}`]: setBlockType(type as NodeType, { level }),
         },
       }),
       {}
@@ -110,7 +109,7 @@ export default class Heading extends Node {
     };
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [
       new Plugin({
         props: {
@@ -155,11 +154,12 @@ export default class Heading extends Node {
     ];
   }
 
-  inputRules({ type }: { type: NodeType }) {
-    return this.options.levels.map(level =>
-      textblockTypeInputRule(new RegExp(`^(#{1,${level}})\\s$`), type, () => ({
+  inputRules({ type }: ExtensionOptions): InputRule[] {
+    return this.options.levels.map((level: number) =>
+      textblockTypeInputRule(new RegExp(`^(#{1,${level}})\\s$`), type as NodeType, () => ({
         level,
       }))
     );
   }
+
 }

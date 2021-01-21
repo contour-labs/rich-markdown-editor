@@ -1,7 +1,8 @@
-import { NodeSpec } from "prosemirror-model";
-import NodeWithNodeView from "../NodeWithNodeView";
+import { NodeSpec, Node } from "prosemirror-model";
+import NodeViewNode from "../CustomRender/NodeViewNode";
 import { NodeViewConstructor } from "../../index"
 import { NodeView } from "prosemirror-view";
+import { MarkdownSerializerState } from "prosemirror-markdown";
 
 export enum ConflictIdentity {
   CURRENT = "Current",
@@ -9,9 +10,9 @@ export enum ConflictIdentity {
   BOTH = "Both"
 }
 
-class MergeConflict extends NodeWithNodeView {
+class MergeConflict extends NodeViewNode {
 
-  get name() {
+  get name(): string {
     return "merge_conflict";
   }
 
@@ -49,6 +50,10 @@ class MergeConflict extends NodeWithNodeView {
 
       return { dom, contentDOM }
     }
+  }
+
+  toMarkdown(_state: MarkdownSerializerState, _node: Node): void {
+    throw new Error("Should never allow the user to perform actions that serialize the state when there are unresolved merge conflicts in the UI")
   }
 
 }

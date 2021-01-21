@@ -1,8 +1,10 @@
-import Node from "./Node";
+import LocalNode from "./LocalNode";
 import { NodeSpec } from "prosemirror-model";
+import { TokenConfig } from "prosemirror-markdown";
 
-export default class TableRow extends Node {
-  get name() {
+export default class TableRow extends LocalNode {
+
+  get name(): string {
     return "tr";
   }
 
@@ -17,7 +19,8 @@ export default class TableRow extends Node {
     };
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { block: "tr" };
   }
+
 }

@@ -1,8 +1,8 @@
 import { Node as PMNode, Mark } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
-import Node from "../nodes/Node";
+import LocalNode from "../nodes/LocalNode";
 
-export default function getMarkAttrs(state: EditorState, type: Node) {
+export default function getMarkAttrs(state: EditorState, type: LocalNode) {
   const { from, to } = state.selection;
   let marks: Mark[] = [];
 

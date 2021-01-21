@@ -3,11 +3,14 @@ import {
   sinkListItem,
   liftListItem,
 } from "prosemirror-schema-list";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
+import LocalNode from "./LocalNode";
+import { NodeSpec, NodeType, Node } from "prosemirror-model";
+import { ExtensionOptions } from "../lib/Extension";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class CheckboxItem extends Node {
-  get name() {
+export default class CheckboxItem extends LocalNode {
+
+  get name(): string {
     return "checkbox_item";
   }
 
@@ -65,7 +68,7 @@ export default class CheckboxItem extends Node {
     };
   }
 
-  handleChange = event => {
+  handleChange = (event: MouseEvent) => {
     const { view } = this.editor;
     const { tr } = view.state;
 
@@ -76,28 +79,28 @@ export default class CheckboxItem extends Node {
 
     if (result) {
       const transaction = tr.setNodeMarkup(result.inside, undefined, {
-        checked: event.target.checked,
+        checked: (event.target as HTMLInputElement).checked,
       });
       view.dispatch(transaction);
     }
   };
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      Enter: splitListItem(type),
-      Tab: sinkListItem(type),
-      "Shift-Tab": liftListItem(type),
-      "Mod-]": sinkListItem(type),
-      "Mod-[": liftListItem(type),
+      Enter: splitListItem(type as NodeType),
+      Tab: sinkListItem(type as NodeType),
+      "Shift-Tab": liftListItem(type as NodeType),
+      "Mod-]": sinkListItem(type as NodeType),
+      "Mod-[": liftListItem(type as NodeType),
     };
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.write(node.attrs.checked ? "[x] " : "[ ] ");
     state.renderContent(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       block: "checkbox_item",
       getAttrs: tok => ({
@@ -106,4 +109,5 @@ export default class CheckboxItem extends Node {
       }),
     };
   }
+
 }

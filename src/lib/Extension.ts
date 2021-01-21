@@ -1,9 +1,15 @@
-/* eslint-disable no-unused-vars */
 import { InputRule } from "prosemirror-inputrules";
-import { Plugin } from "prosemirror-state";
+import { Plugin, Transaction, EditorState } from "prosemirror-state";
 import Editor from "../";
+import { Schema, NodeType, MarkType } from "prosemirror-model";
+import { EditorView } from "prosemirror-view";
 
-type Command = (attrs) => (state, dispatch) => any;
+export type Command = (attrs: Record<string, any>) => (state: EditorState, dispatch: (tr: Transaction) => void, view: EditorView) => any;
+
+export interface ExtensionOptions {
+  schema: Schema,
+  type?: NodeType | MarkType
+}
 
 export default class Extension {
   options: Record<string, any>;
@@ -16,15 +22,15 @@ export default class Extension {
     };
   }
 
-  bindEditor(editor: Editor) {
+  bindEditor(editor: Editor): void {
     this.editor = editor;
   }
 
-  get type() {
+  get type(): string {
     return "extension";
   }
 
-  get name() {
+  get name(): string {
     return "";
   }
 
@@ -32,19 +38,20 @@ export default class Extension {
     return [];
   }
 
-  keys(options) {
+  keys(_options: ExtensionOptions): Record<string, any> {
     return {};
   }
 
-  inputRules(options): InputRule[] {
+  inputRules(_options: ExtensionOptions): InputRule[] {
     return [];
   }
 
-  commands(options): Record<string, Command> | Command {
-    return attrs => () => false;
+  commands(_options: ExtensionOptions): Record<string, Command> | Command {
+    return () => () => false;
   }
 
-  get defaultOptions() {
+  get defaultOptions(): any {
     return {};
   }
+
 }

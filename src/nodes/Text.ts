@@ -1,17 +1,21 @@
-import Node from "./Node";
+import LocalNode from "./LocalNode";
+import { NodeSpec, Node } from "prosemirror-model";
+import { MarkdownSerializerState } from "prosemirror-markdown";
 
-export default class Text extends Node {
-  get name() {
+export default class Text extends LocalNode {
+
+  get name(): string {
     return "text";
   }
 
-  get schema() {
+  get schema(): NodeSpec {
     return {
       group: "inline",
     };
   }
 
-  toMarkdown(state, node) {
-    state.text(node.text);
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
+    state.text(node.text!);
   }
+
 }

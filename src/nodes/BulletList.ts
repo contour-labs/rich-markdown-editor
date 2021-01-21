@@ -1,10 +1,13 @@
-import { wrappingInputRule } from "prosemirror-inputrules";
+import { wrappingInputRule, InputRule } from "prosemirror-inputrules";
 import toggleList from "../commands/toggleList";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
+import LocalNode from "./LocalNode";
+import { NodeSpec, NodeType, Node } from "prosemirror-model";
+import { ExtensionOptions, Command } from "../lib/Extension";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class BulletList extends Node {
-  get name() {
+export default class BulletList extends LocalNode {
+
+  get name(): string {
     return "bullet_list";
   }
 
@@ -17,25 +20,26 @@ export default class BulletList extends Node {
     };
   }
 
-  commands({ type, schema }) {
-    return () => toggleList(type, schema.nodes.list_item);
+  commands({ type, schema }: ExtensionOptions): Record<string, Command> | Command {
+    return () => toggleList(type as NodeType, schema.nodes.list_item);
   }
 
-  keys({ type, schema }) {
+  keys({ type, schema }: ExtensionOptions): Record<string, any> {
     return {
-      "Shift-Ctrl-8": toggleList(type, schema.nodes.list_item),
+      "Shift-Ctrl-8": toggleList(type as NodeType, schema.nodes.list_item),
     };
   }
 
-  inputRules({ type }) {
-    return [wrappingInputRule(/^\s*([-+*])\s$/, type)];
+  inputRules({ type }: ExtensionOptions): InputRule[] {
+    return [wrappingInputRule(/^\s*([-+*])\s$/, type as NodeType)];
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.renderList(node, "  ", () => (node.attrs.bullet || "*") + " ");
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { block: "bullet_list" };
   }
+
 }

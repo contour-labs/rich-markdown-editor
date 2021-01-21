@@ -1,38 +1,43 @@
 import { toggleMark } from "prosemirror-commands";
 import markInputRule from "../lib/markInputRule";
-import Mark from "./Mark";
+import LocalMark, { MarkInformation } from "./LocalMark";
+import { MarkSpec, MarkType } from "prosemirror-model";
+import { InputRule } from "prosemirror-inputrules";
+import { ExtensionOptions } from "../lib/Extension";
+import { TokenConfig } from "prosemirror-markdown";
 
-export default class Italic extends Mark {
-  get name() {
+export default class Italic extends LocalMark {
+
+  get name(): string {
     return "em";
   }
 
-  get schema() {
+  get schema(): MarkSpec {
     return {
       parseDOM: [
         { tag: "i" },
         { tag: "em" },
-        { style: "font-style", getAttrs: value => value === "italic" },
+        { style: "font-style", getAttrs: value => value === "italic" && null },
       ],
       toDOM: () => ["em"],
     };
   }
 
-  inputRules({ type }) {
+  inputRules({ type }: ExtensionOptions): InputRule[] {
     return [
-      markInputRule(/(?:^|[^_])(_([^_]+)_)$/, type),
-      markInputRule(/(?:^|[^*])(\*([^*]+)\*)$/, type),
+      markInputRule(/(?:^|[^_])(_([^_]+)_)$/, type as MarkType),
+      markInputRule(/(?:^|[^*])(\*([^*]+)\*)$/, type as MarkType),
     ];
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Mod-i": toggleMark(type),
-      "Mod-I": toggleMark(type),
+      "Mod-i": toggleMark(type as MarkType),
+      "Mod-I": toggleMark(type as MarkType),
     };
   }
 
-  get toMarkdown() {
+  get toMarkdown(): MarkInformation {
     return {
       open: "*",
       close: "*",
@@ -41,7 +46,8 @@ export default class Italic extends Mark {
     };
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { mark: "em" };
   }
+
 }

@@ -1,8 +1,9 @@
-import Node from "./Node";
+import LocalNode from "./LocalNode";
 import { NodeSpec } from "prosemirror-model";
 
-export default class Doc extends Node {
-  get name() {
+export default class Doc extends LocalNode {
+
+  get name(): string {
     return "doc";
   }
 
@@ -16,4 +17,5 @@ export default class Doc extends Node {
       }
     };
   }
+
 }

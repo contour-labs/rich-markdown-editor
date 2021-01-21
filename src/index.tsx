@@ -5,7 +5,7 @@ import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
 import { EditorView, Decoration, NodeView } from "prosemirror-view";
-import { Schema, NodeSpec, MarkSpec, Node as ProsemirrorNode, Fragment } from "prosemirror-model";
+import { Schema, NodeSpec, MarkSpec, Node } from "prosemirror-model";
 import { inputRules, InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
 import { baseKeymap } from "prosemirror-commands";
@@ -24,7 +24,7 @@ import ExtensionManager from "./lib/ExtensionManager";
 import headingToSlug from "./lib/headingToSlug";
 
 // nodes
-import NodeWithNodeView from "./nodes/NodeWithNodeView";
+import NodeWithNodeView from "./nodes/CustomRender/NodeViewNode";
 import Doc from "./nodes/Doc";
 import Text from "./nodes/Text";
 import Blockquote from "./nodes/Blockquote";
@@ -65,6 +65,8 @@ import { regexParseConflicts as regexParseConflicts, documentWithConflicts } fro
 import MergeConflict from "./nodes/MergeConflict/MergeConflict";
 import MergeSection from "./nodes/MergeConflict/MergeSection";
 import Unconflicted from "./nodes/MergeConflict/Unconflicted";
+import ReactNode from "./nodes/CustomRender/ReactNode";
+import ComponentView from "./lib/ComponentView";
 
 export { schema, parser, serializer } from "./server";
 
@@ -108,7 +110,7 @@ type State = {
 };
 
 export type NodeViewConstructor = (
-  node: ProsemirrorNode,
+  node: Node,
   view: EditorView,
   getPos: (() => number) | boolean,
   decorations: Decoration[]
@@ -124,7 +126,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     onImageUploadStop: () => {
       // no default behavior
     },
-    onClickLink: href => {
+    onClickLink: (href: string) => {
       window.open(href, "_blank");
     },
     embeds: [],
@@ -147,9 +149,9 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   plugins: Plugin[];
   keymaps: Plugin[];
   inputRules: InputRule[];
-  nodeViews: { [name: string]: NodeViewConstructor };
-  nodes: { [name: string]: NodeSpec };
-  marks: { [name: string]: MarkSpec };
+  nodeViews: Record<string, NodeViewConstructor>;
+  nodes: Record<string, NodeSpec>;
+  marks: Record<string, MarkSpec>;
   commands: Record<string, any>;
 
   componentDidMount() {
@@ -193,8 +195,8 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     this.schema = this.createSchema();
     this.plugins = this.createPlugins();
     this.keymaps = this.createKeymaps();
-    this.serializer = this.createSerializer();
     this.parser = this.createParser();
+    this.serializer = this.createSerializer();
     this.inputRules = this.createInputRules();
     this.nodeViews = this.createNodeViews();
     this.view = this.createView();
@@ -278,65 +280,72 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  createPlugins() {
+  createPlugins(): Plugin[] {
     return this.extensions.plugins;
   }
 
-  createKeymaps() {
-    return this.extensions.keymaps({
-      schema: this.schema,
-    });
+  createKeymaps(): Plugin[] {
+    return this.extensions.keymaps({ schema: this.schema });
   }
 
-  createInputRules() {
-    return this.extensions.inputRules({
-      schema: this.schema,
-    });
+  createInputRules(): InputRule[] {
+    return this.extensions.inputRules({ schema: this.schema });
   }
 
-  createNodeViews(): { [name: string]: NodeViewConstructor } {
+  createNodeViews(): Record<string, NodeViewConstructor> {
     return this.extensions.extensions
       .reduce((nodeViewConstructors, extension) => {
         if (extension instanceof NodeWithNodeView) {
           nodeViewConstructors[extension.name] = extension.nodeViewConstructor
+        } else if (extension instanceof ReactNode) {
+          nodeViewConstructors[extension.name] = (node, view, getPos, decorations) => {
+            return new ComponentView(extension.component, {
+              editor: this,
+              extension,
+              node,
+              view,
+              getPos,
+              decorations,
+            });
+          };
         }
         return nodeViewConstructors
-      }, {} as { [name: string]: NodeViewConstructor });
+      }, {} as Record<string, NodeViewConstructor>);
   }
 
-  createCommands() {
+  createCommands(): Record<string, any> {
     return this.extensions.commands({
       schema: this.schema,
       view: this.view,
     });
   }
 
-  createNodes() {
+  createNodes(): Record<string, NodeSpec> {
     return this.extensions.nodes;
   }
 
-  createMarks() {
+  createMarks(): Record<string, MarkSpec> {
     return this.extensions.marks;
   }
 
-  createSchema() {
+  createSchema(): Schema {
     return new Schema({
       nodes: this.nodes,
       marks: this.marks,
     });
   }
 
-  createSerializer() {
+  createSerializer(): MarkdownSerializer {
     return this.extensions.serializer();
   }
 
-  createParser() {
+  createParser(): MarkdownParser {
     return this.extensions.parser({
       schema: this.schema,
     });
   }
 
-  createState(value?: string) {
+  createState(value?: string): EditorState {
     return EditorState.create({
       schema: this.schema,
       doc: this.createDocument(value || this.props.defaultValue),
@@ -353,7 +362,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     });
   }
 
-  createDocument(content: string): ProsemirrorNode {
+  createDocument(content: string): Node {
     const results = regexParseConflicts(content)
     if (results !== false) {
       return documentWithConflicts(this.parser, results, this.schema.nodes)
@@ -662,18 +671,6 @@ const StyledEditor = styled("div") <{ readOnly?: boolean }>`
       color: ${props => props.theme.textSecondary};
       font-size: 13px;
       left: -24px;
-    }
-  }
-
-  div.ProseMirror > a.heading-name:first-child,
-  div.unconflictedDOM:first-child > div.unconflictedContentDOM > a.heading-name {
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      margin-top: 0;
     }
   }
 

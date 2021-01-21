@@ -1,10 +1,13 @@
-import { wrappingInputRule } from "prosemirror-inputrules";
-import Node from "./Node";
+import { wrappingInputRule, InputRule } from "prosemirror-inputrules";
+import LocalNode from "./LocalNode";
 import toggleWrap from "../commands/toggleWrap";
-import { NodeSpec } from "prosemirror-model";
+import { NodeSpec, NodeType, Node } from "prosemirror-model";
+import { ExtensionOptions, Command } from "../lib/Extension";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class Blockquote extends Node {
-  get name() {
+export default class Blockquote extends LocalNode {
+
+  get name(): string {
     return "blockquote";
   }
 
@@ -17,25 +20,26 @@ export default class Blockquote extends Node {
     };
   }
 
-  inputRules({ type }) {
-    return [wrappingInputRule(/^\s*>\s$/, type)];
+  inputRules({ type }: ExtensionOptions): InputRule[] {
+    return [wrappingInputRule(/^\s*>\s$/, type as NodeType)];
   }
 
-  commands({ type }) {
-    return () => toggleWrap(type);
+  commands({ type }: ExtensionOptions): Record<string, Command> | Command {
+    return () => toggleWrap(type as NodeType);
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Mod-]": toggleWrap(type),
+      "Mod-]": toggleWrap(type as NodeType),
     };
   }
 
-  toMarkdown(state, node) {
-    state.wrapBlock("> ", null, node, () => state.renderContent(node));
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
+    state.wrapBlock("> ", undefined, node, () => state.renderContent(node));
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { block: "blockquote" };
   }
+
 }

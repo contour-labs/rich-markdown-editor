@@ -1,10 +1,13 @@
-import { wrappingInputRule } from "prosemirror-inputrules";
+import { wrappingInputRule, InputRule } from "prosemirror-inputrules";
 import toggleList from "../commands/toggleList";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
+import LocalNode from "./LocalNode";
+import { NodeSpec, Node, NodeType } from "prosemirror-model";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
+import { ExtensionOptions, Command } from "../lib/Extension";
 
-export default class OrderedList extends Node {
-  get name() {
+export default class OrderedList extends LocalNode {
+
+  get name(): string {
     return "ordered_list";
   }
 
@@ -34,28 +37,28 @@ export default class OrderedList extends Node {
     };
   }
 
-  commands({ type, schema }) {
-    return () => toggleList(type, schema.nodes.list_item);
+  commands({ type, schema }: ExtensionOptions): Record<string, Command> | Command {
+    return () => toggleList(type as NodeType, schema.nodes.list_item);
   }
 
-  keys({ type, schema }) {
+  keys({ type, schema }: ExtensionOptions): Record<string, any> {
     return {
-      "Shift-Ctrl-9": toggleList(type, schema.nodes.list_item),
+      "Shift-Ctrl-9": toggleList(type as NodeType, schema.nodes.list_item),
     };
   }
 
-  inputRules({ type }) {
+  inputRules({ type }: ExtensionOptions): InputRule[] {
     return [
       wrappingInputRule(
         /^(\d+)\.\s$/,
-        type,
+        type as NodeType,
         match => ({ order: +match[1] }),
         (match, node) => node.childCount + node.attrs.order === +match[1]
       ),
     ];
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     const start = node.attrs.order || 1;
     const maxW = `${start + node.childCount - 1}`.length;
     const space = state.repeat(" ", maxW + 2);
@@ -66,7 +69,8 @@ export default class OrderedList extends Node {
     });
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { block: "ordered_list" };
   }
+
 }

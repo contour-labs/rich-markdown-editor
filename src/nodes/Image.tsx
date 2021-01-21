@@ -1,13 +1,16 @@
 import * as React from "react";
-import { Plugin } from "prosemirror-state";
+import { Plugin, TextSelection } from "prosemirror-state";
 import { InputRule } from "prosemirror-inputrules";
 import styled from "styled-components";
 import ImageZoom from "react-medium-image-zoom";
 import getDataTransferFiles from "../lib/getDataTransferFiles";
 import uploadPlaceholderPlugin from "../lib/uploadPlaceholder";
 import insertFiles from "../commands/insertFiles";
-import Node from "./Node";
-import { NodeSpec, DOMOutputSpec } from "prosemirror-model";
+import { NodeSpec, Node, NodeType } from "prosemirror-model";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
+import { ExtensionOptions, Command } from "../lib/Extension";
+import ReactNode from "./CustomRender/ReactNode";
+import { ComponentOptions } from "../lib/ComponentView";
 
 /**
  * Matches following attributes in Markdown-typed image: [, alt, src, title]
@@ -19,7 +22,7 @@ import { NodeSpec, DOMOutputSpec } from "prosemirror-model";
  */
 const IMAGE_INPUT_REGEX = /!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
 
-const uploadPlugin = options =>
+const uploadPlugin = (options: Record<string, any>) =>
   new Plugin({
     props: {
       handleDOMEvents: {
@@ -31,8 +34,7 @@ const uploadPlugin = options =>
           if (!event.clipboardData) return false;
 
           // check if we actually pasted any files
-          const files = Array.prototype.slice
-            .call(event.clipboardData.items)
+          const files = Array.from(event.clipboardData.items)
             .map(dt => dt.getAsFile())
             .filter(file => file);
 
@@ -73,8 +75,9 @@ const uploadPlugin = options =>
     },
   });
 
-export default class Image extends Node {
-  get name() {
+export default class Image extends ReactNode {
+
+  get name(): string {
     return "image";
   }
 
@@ -116,14 +119,14 @@ export default class Image extends Node {
     };
   }
 
-  handleKeyDown = event => {
+  handleKeyDown = (event: React.KeyboardEvent<HTMLParagraphElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
       return;
     }
   };
 
-  handleBlur = ({ node, getPos }) => event => {
+  handleBlur = ({ node, getPos }) => (event: React.FocusEvent<HTMLParagraphElement>) => {
     const alt = event.target.innerText;
     const src = node.attrs.src;
     if (alt === node.attrs.alt) return;
@@ -140,9 +143,8 @@ export default class Image extends Node {
     view.dispatch(transaction);
   };
 
-  component = options => {
-    const { theme } = options;
-    const { alt, src } = options.node.attrs;
+  component({ node, theme, isEditable, getPos }: ComponentOptions): React.ReactElement {
+    const { alt, src } = node.attrs;
 
     return (
       <div className="image" contentEditable={false}>
@@ -162,12 +164,12 @@ export default class Image extends Node {
           }}
           shouldRespectMaxDimension
         />
-        {(options.isEditable || alt) && (
+        {(isEditable || alt) && (
           <Caption
             onKeyDown={this.handleKeyDown}
-            onBlur={this.handleBlur(options)}
+            onBlur={this.handleBlur({ node, getPos })}
             tabIndex={-1}
-            contentEditable={options.isEditable}
+            contentEditable={isEditable}
             suppressContentEditableWarning
           >
             {alt}
@@ -177,7 +179,7 @@ export default class Image extends Node {
     );
   };
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.write(
       "![" +
       state.esc((node.attrs.alt || "").replace("\n", "") || "") +
@@ -187,30 +189,30 @@ export default class Image extends Node {
     );
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       node: "image",
       getAttrs: token => ({
         src: token.attrGet("src"),
-        alt: (token.children[0] && token.children[0].content) || null,
+        alt: token.children ? token.children[0].content : null,
       }),
     };
   }
 
-  commands({ type }) {
+  commands({ type }: ExtensionOptions): Record<string, Command> | Command {
     return attrs => (state, dispatch) => {
-      const { selection } = state;
+      const selection = state.selection as TextSelection;
       const position = selection.$cursor
         ? selection.$cursor.pos
         : selection.$to.pos;
-      const node = type.create(attrs);
+      const node = (type as NodeType).create(attrs);
       const transaction = state.tr.insert(position, node);
       dispatch(transaction);
       return true;
     };
   }
 
-  inputRules({ type }) {
+  inputRules({ type }: ExtensionOptions): InputRule[] {
     return [
       new InputRule(IMAGE_INPUT_REGEX, (state, match, start, end) => {
         const [okay, alt, src] = match;
@@ -220,7 +222,7 @@ export default class Image extends Node {
           tr.replaceWith(
             start - 1,
             end,
-            type.create({
+            (type as NodeType).create({
               src,
               alt,
             })
@@ -232,9 +234,10 @@ export default class Image extends Node {
     ];
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [uploadPlaceholderPlugin, uploadPlugin(this.options)];
   }
+
 }
 
 const Caption = styled.p`

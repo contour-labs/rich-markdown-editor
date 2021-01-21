@@ -1,5 +1,5 @@
 import { NodeSpec, Node } from "prosemirror-model";
-import NodeWithNodeView from "../NodeWithNodeView";
+import NodeWithNodeView from "../CustomRender/NodeViewNode";
 import { NodeViewConstructor } from "../..";
 import { NodeView, EditorView } from "prosemirror-view";
 import { mergeSectionThemes } from "./MergeSection";
@@ -9,7 +9,7 @@ const passiveOpacity = "66"
 
 class Unconflicted extends NodeWithNodeView {
 
-  get name() {
+  get name(): string {
     return "unconflicted";
   }
 
@@ -70,7 +70,7 @@ class Unconflicted extends NodeWithNodeView {
     })
   }
 
-  toMarkdown(state: MarkdownSerializerState, node: Node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.renderContent(node)
   }
 

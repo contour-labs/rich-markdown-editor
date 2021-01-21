@@ -1,35 +1,40 @@
 import { toggleMark } from "prosemirror-commands";
 import markInputRule from "../lib/markInputRule";
-import Mark from "./Mark";
+import LocalMark, { MarkInformation } from "./LocalMark";
+import { MarkSpec, NodeType, MarkType } from "prosemirror-model";
+import { TokenConfig } from "prosemirror-markdown";
+import { ExtensionOptions } from "../lib/Extension";
+import { InputRule } from "prosemirror-inputrules";
 
-export default class Bold extends Mark {
-  get name() {
+export default class Bold extends LocalMark {
+
+  get name(): string {
     return "strong";
   }
 
-  get schema() {
+  get schema(): MarkSpec {
     return {
       parseDOM: [
         { tag: "b" },
         { tag: "strong" },
-        { style: "font-style", getAttrs: value => value === "bold" },
+        { style: "font-style", getAttrs: value => value === "bold" && null },
       ],
       toDOM: () => ["strong"],
     };
   }
 
-  inputRules({ type }) {
-    return [markInputRule(/(?:\*\*|__)([^*_]+)(?:\*\*|__)$/, type)];
+  inputRules({ type }: ExtensionOptions): InputRule[] {
+    return [markInputRule(/(?:\*\*|__)([^*_]+)(?:\*\*|__)$/, type as MarkType)];
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Mod-b": toggleMark(type),
-      "Mod-B": toggleMark(type),
+      "Mod-b": toggleMark(type as MarkType),
+      "Mod-B": toggleMark(type as MarkType),
     };
   }
 
-  get toMarkdown() {
+  get toMarkdown(): MarkInformation {
     return {
       open: "**",
       close: "**",
@@ -38,7 +43,8 @@ export default class Bold extends Mark {
     };
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { mark: "strong" };
   }
+
 }

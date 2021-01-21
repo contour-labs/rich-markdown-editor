@@ -3,11 +3,14 @@ import {
   sinkListItem,
   liftListItem,
 } from "prosemirror-schema-list";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
+import LocalNode from "./LocalNode";
+import { NodeSpec, NodeType, Node } from "prosemirror-model";
+import { ExtensionOptions } from "../lib/Extension";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class ListItem extends Node {
-  get name() {
+export default class ListItem extends LocalNode {
+
+  get name(): string {
     return "list_item";
   }
 
@@ -21,21 +24,22 @@ export default class ListItem extends Node {
     };
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      Enter: splitListItem(type),
-      Tab: sinkListItem(type),
-      "Shift-Tab": liftListItem(type),
-      "Mod-]": sinkListItem(type),
-      "Mod-[": liftListItem(type),
+      Enter: splitListItem(type as NodeType),
+      Tab: sinkListItem(type as NodeType),
+      "Shift-Tab": liftListItem(type as NodeType),
+      "Mod-]": sinkListItem(type as NodeType),
+      "Mod-[": liftListItem(type as NodeType),
     };
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.renderContent(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { block: "list_item" };
   }
+
 }

@@ -1,4 +1,4 @@
-import Node from "./Node";
+import LocalNode from "./LocalNode";
 import { DecorationSet, Decoration } from "prosemirror-view";
 import {
   tableEditing,
@@ -21,11 +21,14 @@ import {
   moveRow,
   addRowAt,
 } from "prosemirror-utils";
-import { Plugin, TextSelection } from "prosemirror-state";
-import { NodeSpec } from "prosemirror-model";
+import { Plugin, TextSelection, EditorState, Transaction } from "prosemirror-state";
+import { NodeSpec, Node } from "prosemirror-model";
+import { ExtensionOptions, Command } from "../lib/Extension";
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class Table extends Node {
-  get name() {
+export default class Table extends LocalNode {
+
+  get name(): string {
     return "table";
   }
 
@@ -50,7 +53,7 @@ export default class Table extends Node {
     };
   }
 
-  commands({ schema }) {
+  commands({ schema }: ExtensionOptions): Record<string, Command> | Command {
     return {
       createTable: ({ rowsCount, colsCount }) => (state, dispatch) => {
         const offset = state.tr.selection.anchor + 1;
@@ -65,7 +68,7 @@ export default class Table extends Node {
         const cells = getCellsInColumn(index)(state.selection) || [];
         let transaction = state.tr;
         cells.forEach(({ pos }) => {
-          transaction = transaction.setNodeMarkup(pos, null, {
+          transaction = transaction.setNodeMarkup(pos, undefined, {
             alignment,
           });
         });
@@ -89,16 +92,16 @@ export default class Table extends Node {
       toggleHeaderColumn: () => toggleHeaderColumn,
       toggleHeaderRow: () => toggleHeaderRow,
       toggleHeaderCell: () => toggleHeaderCell,
-      setCellAttr: () => setCellAttr,
-      fixTables: () => fixTables,
+      setCellAttr: (() => setCellAttr) as any,
+      fixTables: (() => fixTables) as any,
     };
   }
 
-  keys() {
+  keys(): Record<string, any> {
     return {
       Tab: goToNextCell(1),
       "Shift-Tab": goToNextCell(-1),
-      Enter: (state, dispatch) => {
+      Enter: (state: EditorState, dispatch: (tr: Transaction) => void) => {
         if (!isInTable(state)) return false;
 
         // TODO: Adding row at the end for now, can we find the current cell
@@ -111,16 +114,16 @@ export default class Table extends Node {
     };
   }
 
-  toMarkdown(state, node) {
-    state.renderTable(node);
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
+    (state as any).renderTable(node);
     state.closeBlock(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return { block: "table" };
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [
       tableEditing(),
       new Plugin({
@@ -160,4 +163,5 @@ export default class Table extends Node {
       }),
     ];
   }
+
 }

@@ -1,8 +1,9 @@
 import { NodeSpec, Fragment, Node } from "prosemirror-model";
-import NodeWithNodeView from "../NodeWithNodeView";
+import NodeWithNodeView from "../CustomRender/NodeViewNode";
 import { NodeView } from "prosemirror-view";
 import { NodeViewConstructor } from "../..";
 import { ConflictIdentity } from "./MergeConflict";
+import { MarkdownSerializerState } from "prosemirror-markdown";
 
 interface Theme {
   color: string
@@ -10,7 +11,7 @@ interface Theme {
   backgroundDark: string
 }
 
-export const mergeSectionThemes: { [identity: string]: Theme } = {
+export const mergeSectionThemes: Record<string, Theme> = {
   [ConflictIdentity.CURRENT]: {
     color: "#17a34a",
     backgroundLight: "#dcfce6",
@@ -37,7 +38,7 @@ type ClickHandler = (generateUnconflicted: (self: Node, parent: Node) => Node) =
 
 class MergeSection extends NodeWithNodeView {
 
-  get name() {
+  get name(): string {
     return "merge_section";
   }
 
@@ -164,6 +165,10 @@ class MergeSection extends NodeWithNodeView {
     const { color, backgroundDark } = mergeSectionThemes[ConflictIdentity.INCOMING]
     tail.style.color = color
     tail.style.background = backgroundDark
+  }
+
+  toMarkdown(_state: MarkdownSerializerState, _node: Node): void {
+    throw new Error("Should never allow the user to perform actions that serialize the state when there are unresolved merge conflicts in the UI")
   }
 
   private advanceToNextConflict = (): void => {

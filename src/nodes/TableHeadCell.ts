@@ -1,12 +1,14 @@
 import { DecorationSet, Decoration } from "prosemirror-view";
 import { Plugin } from "prosemirror-state";
 import { isColumnSelected, getCellsInRow } from "prosemirror-utils";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
+import LocalNode from "./LocalNode";
+import { NodeSpec, Node } from "prosemirror-model";
 import Token = require("markdown-it/lib/token");
+import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
 
-export default class TableHeadCell extends Node {
-  get name() {
+export default class TableHeadCell extends LocalNode {
+
+  get name(): string {
     return "th";
   }
 
@@ -33,18 +35,18 @@ export default class TableHeadCell extends Node {
     };
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     state.renderContent(node);
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       block: "th",
       getAttrs: (token: Token) => ({ alignment: token.info }),
     };
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [
       new Plugin({
         props: {
@@ -85,4 +87,5 @@ export default class TableHeadCell extends Node {
       }),
     ];
   }
+
 }

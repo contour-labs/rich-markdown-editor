@@ -1,10 +1,12 @@
 import { setBlockType } from "prosemirror-commands";
-import Node from "./Node";
-import { NodeSpec } from "prosemirror-model";
-import { TokenConfig } from "prosemirror-markdown";
+import LocalNode from "./LocalNode";
+import { NodeSpec, NodeType, Node } from "prosemirror-model";
+import { TokenConfig, MarkdownSerializerState } from "prosemirror-markdown";
+import { ExtensionOptions, Command } from "../lib/Extension";
 
-export default class Paragraph extends Node {
-  get name() {
+export default class Paragraph extends LocalNode {
+
+  get name(): string {
     return "paragraph";
   }
 
@@ -13,29 +15,29 @@ export default class Paragraph extends Node {
       content: "inline*",
       group: "block",
       parseDOM: [{ tag: "p" }],
-      toDOM(node) {
+      toDOM() {
         return ["p", 0];
       },
     };
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Shift-Ctrl-0": setBlockType(type),
+      "Shift-Ctrl-0": setBlockType(type as NodeType),
     };
   }
 
-  commands({ type }) {
-    return () => setBlockType(type);
+  commands({ type }: ExtensionOptions): Record<string, Command> | Command {
+    return () => setBlockType(type as NodeType);
   }
 
-  toMarkdown(state, node) {
+  toMarkdown(state: MarkdownSerializerState, node: Node): void {
     // render empty paragraphs as hard breaks to ensure that newlines are
     // persisted between reloads (this breaks from markdown tradition)
     if (
       node.textContent.trim() === "" &&
       node.childCount === 0 &&
-      !state.inTable
+      !(state as any).inTable
     ) {
       state.write("\\\n");
     } else {
@@ -47,4 +49,5 @@ export default class Paragraph extends Node {
   parseMarkdown(): TokenConfig {
     return { block: "paragraph" }
   }
+
 }

@@ -256,7 +256,7 @@ class BlockMenu extends React.Component<Props, State> {
     this.props.onClose();
   };
 
-  insertBlock(item) {
+  insertBlock(item: MenuItem) {
     const { state, dispatch } = this.props.view;
     const parent = findParentNode(node => !!node)(state.selection);
 
@@ -270,9 +270,9 @@ class BlockMenu extends React.Component<Props, State> {
       );
     }
 
-    const command = this.props.commands[item.name];
+    const command = this.props.commands[item.name!];
     if (command) {
-      command(item.attrs);
+      command(item.attrs!);
     } else {
       this.props.commands[`create${capitalize(item.name)}`](item.attrs);
     }
@@ -397,49 +397,49 @@ class BlockMenu extends React.Component<Props, State> {
               />
             </LinkInputWrapper>
           ) : (
-            <List>
-              {items.map((item, index) => {
-                if (item.name === "separator") {
+              <List>
+                {items.map((item, index) => {
+                  if (item.name === "separator") {
+                    return (
+                      <ListItem key={index}>
+                        <hr />
+                      </ListItem>
+                    );
+                  }
+                  const selected = index === this.state.selectedIndex && isActive;
+
+                  if (!item.title || !item.icon) {
+                    return null;
+                  }
+
                   return (
                     <ListItem key={index}>
-                      <hr />
+                      <BlockMenuItem
+                        onClick={() => {
+                          switch (item.name) {
+                            case "image":
+                              return this.triggerImagePick();
+                            case "embed":
+                              return this.triggerLinkInput(item);
+                            default:
+                              this.insertBlock(item);
+                          }
+                        }}
+                        selected={selected}
+                        icon={item.icon}
+                        title={item.title}
+                        shortcut={item.shortcut}
+                      ></BlockMenuItem>
                     </ListItem>
                   );
-                }
-                const selected = index === this.state.selectedIndex && isActive;
-
-                if (!item.title || !item.icon) {
-                  return null;
-                }
-
-                return (
-                  <ListItem key={index}>
-                    <BlockMenuItem
-                      onClick={() => {
-                        switch (item.name) {
-                          case "image":
-                            return this.triggerImagePick();
-                          case "embed":
-                            return this.triggerLinkInput(item);
-                          default:
-                            this.insertBlock(item);
-                        }
-                      }}
-                      selected={selected}
-                      icon={item.icon}
-                      title={item.title}
-                      shortcut={item.shortcut}
-                    ></BlockMenuItem>
+                })}
+                {items.length === 0 && (
+                  <ListItem>
+                    <Empty>No results</Empty>
                   </ListItem>
-                );
-              })}
-              {items.length === 0 && (
-                <ListItem>
-                  <Empty>No results</Empty>
-                </ListItem>
-              )}
-            </List>
-          )}
+                )}
+              </List>
+            )}
           <VisuallyHidden>
             <input
               type="file"

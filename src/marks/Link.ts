@@ -1,11 +1,14 @@
 import { toggleMark } from "prosemirror-commands";
-import { Plugin } from "prosemirror-state";
+import { Plugin, EditorState, Transaction } from "prosemirror-state";
 import { InputRule } from "prosemirror-inputrules";
-import Mark from "./Mark";
+import LocalMark, { MarkInformation } from "./LocalMark";
+import { MarkSpec, MarkType, Mark, Fragment } from "prosemirror-model";
+import { ExtensionOptions, Command } from "../lib/Extension";
+import { TokenConfig } from "prosemirror-markdown";
 
 const LINK_INPUT_REGEX = /\[(.+)]\((\S+)\)/;
 
-function isPlainURL(link, parent, index, side) {
+function isPlainURL(link: Mark, parent: Fragment, index: number, side: number): boolean {
   if (link.attrs.title || !/^\w+:/.test(link.attrs.href)) {
     return false;
   }
@@ -27,12 +30,13 @@ function isPlainURL(link, parent, index, side) {
   return !link.isInSet(next.marks);
 }
 
-export default class Link extends Mark {
-  get name() {
+export default class Link extends LocalMark {
+
+  get name(): string {
     return "link";
   }
 
-  get schema() {
+  get schema(): MarkSpec {
     return {
       attrs: {
         href: {
@@ -59,7 +63,7 @@ export default class Link extends Mark {
     };
   }
 
-  inputRules({ type }) {
+  inputRules({ type }: ExtensionOptions): InputRule[] {
     return [
       new InputRule(LINK_INPUT_REGEX, (state, match, start, end) => {
         const [okay, alt, href] = match;
@@ -69,7 +73,7 @@ export default class Link extends Mark {
           tr.replaceWith(start, end, this.editor.schema.text(alt)).addMark(
             start,
             start + alt.length,
-            type.create({ href })
+            (type as MarkType).create({ href })
           );
         }
 
@@ -78,24 +82,23 @@ export default class Link extends Mark {
     ];
   }
 
-  commands({ type }) {
-    return ({ href } = { href: "" }) => toggleMark(type, { href });
+  commands({ type }: ExtensionOptions): Record<string, Command> | Command {
+    return ({ href } = { href: "" }) => toggleMark(type as MarkType, { href })
   }
 
-  keys({ type }) {
+  keys({ type }: ExtensionOptions): Record<string, any> {
     return {
-      "Mod-k": (state, dispatch) => {
+      "Mod-k": (state: EditorState, dispatch: (tr: Transaction) => void) => {
         if (state.selection.empty) {
           this.options.onKeyboardShortcut();
           return true;
         }
-
-        return toggleMark(type, { href: "" })(state, dispatch);
+        return toggleMark(type as MarkType, { href: "" })(state, dispatch);
       },
     };
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return [
       new Plugin({
         props: {
@@ -137,7 +140,7 @@ export default class Link extends Mark {
     ];
   }
 
-  get toMarkdown() {
+  get toMarkdown(): MarkInformation {
     return {
       open(_state, mark, parent, index) {
         return isPlainURL(mark, parent, index, 1) ? "<" : "[";
@@ -146,14 +149,14 @@ export default class Link extends Mark {
         return isPlainURL(mark, parent, index, -1)
           ? ">"
           : "](" +
-              state.esc(mark.attrs.href) +
-              (mark.attrs.title ? " " + state.quote(mark.attrs.title) : "") +
-              ")";
+          state.esc(mark.attrs.href) +
+          (mark.attrs.title ? " " + state.quote(mark.attrs.title) : "") +
+          ")";
       },
     };
   }
 
-  parseMarkdown() {
+  parseMarkdown(): TokenConfig {
     return {
       mark: "link",
       getAttrs: tok => ({
@@ -162,4 +165,5 @@ export default class Link extends Mark {
       }),
     };
   }
+
 }
