@@ -1,8 +1,8 @@
 import { NodeSpec, Node } from "prosemirror-model";
 import NodeViewNode, { NodeViewProps } from "../NodeViewNode";
-import { NodeView, EditorView } from "./node_modules/prosemirror-view";
+import { NodeView, EditorView } from "prosemirror-view";
 import { mergeSectionThemes } from "./MergeSection";
-import { MarkdownSerializerState } from "./node_modules/prosemirror-markdown";
+import { MarkdownSerializerState } from "prosemirror-markdown";
 
 const passiveOpacity = "66"
 
