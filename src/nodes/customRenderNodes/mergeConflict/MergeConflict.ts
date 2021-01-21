@@ -1,7 +1,7 @@
 import { NodeSpec, Node } from "prosemirror-model";
 import NodeViewNode, { NodeViewProps } from "../NodeViewNode";
-import { NodeView } from "prosemirror-view";
-import { MarkdownSerializerState } from "prosemirror-markdown";
+import { NodeView } from "./node_modules/prosemirror-view";
+import { MarkdownSerializerState } from "./node_modules/prosemirror-markdown";
 
 export enum ConflictIdentity {
   CURRENT = "Current",

@@ -24,7 +24,7 @@ import ExtensionManager from "./lib/ExtensionManager";
 import headingToSlug from "./lib/headingToSlug";
 
 // nodes
-import NodeViewNode, { NodeViewConstructor } from "./nodes/CustomRender/NodeViewNode";
+import NodeViewNode, { NodeViewConstructor } from "./nodes/customRenderNodes/NodeViewNode";
 import Doc from "./nodes/Doc";
 import Text from "./nodes/Text";
 import Blockquote from "./nodes/Blockquote";
@@ -33,10 +33,10 @@ import CodeBlock from "./nodes/CodeBlock";
 import CodeFence from "./nodes/CodeFence";
 import CheckboxList from "./nodes/CheckboxList";
 import CheckboxItem from "./nodes/CheckboxItem";
-import Embed from "./nodes/Embed";
+import Embed from "./nodes/customRenderNodes/reactNodes/Embed";
 import Heading from "./nodes/Heading";
 import HorizontalRule from "./nodes/HorizontalRule";
-import Image from "./nodes/Image";
+import Image from "./nodes/customRenderNodes/reactNodes/Image";
 import ListItem from "./nodes/ListItem";
 import OrderedList from "./nodes/OrderedList";
 import Paragraph from "./nodes/Paragraph";
@@ -62,10 +62,10 @@ import SmartText from "./plugins/SmartText";
 import TrailingNode from "./plugins/TrailingNode";
 import MarkdownPaste from "./plugins/MarkdownPaste";
 import { regexParseConflicts as regexParseConflicts, documentWithConflicts } from "./lib/mergeConflictCore";
-import MergeConflict from "./nodes/CustomRender/MergeConflict/MergeConflict";
-import MergeSection from "./nodes/CustomRender/MergeConflict/MergeSection";
-import Unconflicted from "./nodes/CustomRender/MergeConflict/Unconflicted";
-import ReactNode from "./nodes/CustomRender/ReactNode";
+import MergeConflict from "./nodes/customRenderNodes/mergeConflict/MergeConflict";
+import MergeSection from "./nodes/customRenderNodes/mergeConflict/MergeSection";
+import Unconflicted from "./nodes/customRenderNodes/mergeConflict/Unconflicted";
+import ReactNode from "./nodes/customRenderNodes/reactNodes/ReactNode";
 import ComponentView from "./lib/ComponentView";
 
 export { schema, parser, serializer } from "./server";
@@ -289,7 +289,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
     return this.extensions.extensions
       .reduce((nodeViewConstructors, extension) => {
         if (extension instanceof NodeViewNode) {
-          nodeViewConstructors[extension.name] = extension.nodeViewConstructor({
+          nodeViewConstructors[extension.name] = extension.getNodeViewConstructor({
             editor: this
           })
         }

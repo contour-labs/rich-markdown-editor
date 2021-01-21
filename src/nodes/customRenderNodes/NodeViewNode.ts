@@ -5,7 +5,7 @@ import { Node } from "prosemirror-model"
 
 export default abstract class NodeViewNode extends LocalNode {
 
-  nodeViewConstructor(extensionProps: NodeViewExtensionProps): NodeViewConstructor {
+  getNodeViewConstructor(extensionProps: NodeViewExtensionProps): NodeViewConstructor {
     return (
       node: Node,
       view: EditorView,
@@ -16,7 +16,7 @@ export default abstract class NodeViewNode extends LocalNode {
     }
   }
 
-  abstract getNodeView(props: NodeViewProps): NodeView;
+  protected abstract getNodeView(props: NodeViewProps): NodeView;
 
 }
 

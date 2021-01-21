@@ -3,14 +3,14 @@ import { Plugin, TextSelection } from "prosemirror-state";
 import { InputRule } from "prosemirror-inputrules";
 import styled from "styled-components";
 import ImageZoom from "react-medium-image-zoom";
-import getDataTransferFiles from "../lib/getDataTransferFiles";
-import uploadPlaceholderPlugin from "../lib/uploadPlaceholder";
-import insertFiles from "../commands/insertFiles";
+import getDataTransferFiles from "../../../lib/getDataTransferFiles";
+import uploadPlaceholderPlugin from "../../../lib/uploadPlaceholder";
+import insertFiles from "../../../commands/insertFiles";
 import { NodeSpec, Node, NodeType } from "prosemirror-model";
 import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
-import { ExtensionOptions, Command } from "../lib/Extension";
-import ReactNode from "./CustomRender/ReactNode";
-import { ComponentOptions } from "../lib/ComponentView";
+import { ExtensionOptions, Command } from "../../../lib/Extension";
+import ReactNode from "./ReactNode";
+import { ComponentOptions } from "../../../lib/ComponentView";
 
 /**
  * Matches following attributes in Markdown-typed image: [, alt, src, title]
@@ -21,59 +21,6 @@ import { ComponentOptions } from "../lib/ComponentView";
  * ![Lorem](image.jpg "Ipsum") -> [, "Lorem", "image.jpg", "Ipsum"]
  */
 const IMAGE_INPUT_REGEX = /!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
-
-const uploadPlugin = (options: Record<string, any>) =>
-  new Plugin({
-    props: {
-      handleDOMEvents: {
-        paste(view, event: ClipboardEvent): boolean {
-          if (view.props.editable && !view.props.editable(view.state)) {
-            return false;
-          }
-
-          if (!event.clipboardData) return false;
-
-          // check if we actually pasted any files
-          const files = Array.from(event.clipboardData.items)
-            .map(dt => dt.getAsFile())
-            .filter(file => file);
-
-          if (files.length === 0) return false;
-
-          const { tr } = view.state;
-          if (!tr.selection.empty) {
-            tr.deleteSelection();
-          }
-          const pos = tr.selection.from;
-
-          insertFiles(view, event, pos, files, options);
-          return true;
-        },
-        drop(view, event: DragEvent): boolean {
-          if (view.props.editable && !view.props.editable(view.state)) {
-            return false;
-          }
-
-          // check if we actually dropped any files
-          const files = getDataTransferFiles(event);
-          if (files.length === 0) return false;
-
-          // grab the position in the document for the cursor
-          const result = view.posAtCoords({
-            left: event.clientX,
-            top: event.clientY,
-          });
-
-          if (result) {
-            insertFiles(view, event, result.pos, files, options);
-            return true;
-          }
-
-          return false;
-        },
-      },
-    },
-  });
 
 export default class Image extends ReactNode {
 
@@ -143,7 +90,7 @@ export default class Image extends ReactNode {
     view.dispatch(transaction);
   };
 
-  component({ node, theme, isEditable, getPos }: ComponentOptions): React.ReactElement {
+  protected getComponent({ node, theme, isEditable, getPos }: ComponentOptions): React.ReactElement {
     const { alt, src } = node.attrs;
 
     return (
@@ -239,6 +186,59 @@ export default class Image extends ReactNode {
   }
 
 }
+
+const uploadPlugin = (options: Record<string, any>) =>
+  new Plugin({
+    props: {
+      handleDOMEvents: {
+        paste(view, event: ClipboardEvent): boolean {
+          if (view.props.editable && !view.props.editable(view.state)) {
+            return false;
+          }
+
+          if (!event.clipboardData) return false;
+
+          // check if we actually pasted any files
+          const files = Array.from(event.clipboardData.items)
+            .map(dt => dt.getAsFile())
+            .filter(file => file);
+
+          if (files.length === 0) return false;
+
+          const { tr } = view.state;
+          if (!tr.selection.empty) {
+            tr.deleteSelection();
+          }
+          const pos = tr.selection.from;
+
+          insertFiles(view, event, pos, files, options);
+          return true;
+        },
+        drop(view, event: DragEvent): boolean {
+          if (view.props.editable && !view.props.editable(view.state)) {
+            return false;
+          }
+
+          // check if we actually dropped any files
+          const files = getDataTransferFiles(event);
+          if (files.length === 0) return false;
+
+          // grab the position in the document for the cursor
+          const result = view.posAtCoords({
+            left: event.clientX,
+            top: event.clientY,
+          });
+
+          if (result) {
+            insertFiles(view, event, result.pos, files, options);
+            return true;
+          }
+
+          return false;
+        },
+      },
+    },
+  });
 
 const Caption = styled.p`
   border: 0;

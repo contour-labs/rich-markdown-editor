@@ -5,7 +5,7 @@ import { EditorView, Decoration, NodeView } from "prosemirror-view";
 import { light as lightTheme, dark as darkTheme } from "../theme";
 import Editor from "../";
 import { Node } from "prosemirror-model"
-import { NodeViewProps } from "../nodes/CustomRender/NodeViewNode";
+import { NodeViewProps } from "../nodes/customRenderNodes/NodeViewNode";
 
 export interface ComponentOptions {
   node: Node

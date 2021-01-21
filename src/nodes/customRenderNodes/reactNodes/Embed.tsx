@@ -1,10 +1,9 @@
-import * as React from "react";
-import LocalNode from "./LocalNode";
+import * as React from "react"
 import { NodeSpec, NodeType, Node } from "prosemirror-model";
-import { ExtensionOptions, Command } from "../lib/Extension";
+import { ExtensionOptions, Command } from "../../../lib/Extension";
 import { MarkdownSerializerState, TokenConfig } from "prosemirror-markdown";
-import ReactNode from "./CustomRender/ReactNode";
-import { ComponentOptions } from "../lib/ComponentView";
+import ReactNode from "./ReactNode";
+import { ComponentOptions } from "../../../lib/ComponentView";
 
 export default class Embed extends ReactNode {
 
@@ -30,7 +29,7 @@ export default class Embed extends ReactNode {
     };
   }
 
-  component({ isEditable, isSelected, theme, node }: ComponentOptions): React.ReactElement {
+  protected getComponent({ isEditable, isSelected, theme, node }: ComponentOptions): React.ReactElement {
     const Component = node.attrs.component;
     return (
       <div contentEditable={false}>
