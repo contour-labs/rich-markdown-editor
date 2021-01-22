@@ -72,13 +72,16 @@ class MergeSection extends NodeViewNode {
     contentDOM.style.padding = "5px 10px"
     contentDOM.style.background = mergeSectionThemes[identity].backgroundLight
 
-    const handler = (generateUnconflicted: (self: Node, parent: Node) => Node): void => {
-      view.state.doc.attrs.conflictCount -= 1
-      view.state.doc.descendants((parentCandidate, pos) => {
+    const handler = (generateUnconflicted: (node: Node, parent: Node) => Node): void => {
+      const { doc, tr } = view.state
+
+      doc.attrs.conflictAction = { conflictId: node.attrs.conflictId, unresolved: false }
+
+      doc.descendants((parentCandidate, pos) => {
         const { type, attrs } = parentCandidate
         if (type.name === "merge_conflict" && attrs.conflictId === conflictId) {
           const unconflicted = generateUnconflicted(node, parentCandidate)
-          view.dispatch(view.state.tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, unconflicted))
+          view.dispatch(tr.replaceRangeWith(pos, pos + parentCandidate.nodeSize, unconflicted))
         }
       })
     }

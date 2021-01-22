@@ -62,8 +62,11 @@ class Unconflicted extends NodeViewNode {
     dom.addEventListener("pointerleave", () => dom.style.background = passive)
     dom.addEventListener("click", () => {
       const pos = getPos()
-      view.state.doc.attrs.conflictCount += 1
-      view.dispatch(view.state.tr.replaceRangeWith(pos, pos + node.nodeSize, originalConflict))
+      const { doc, tr } = view.state
+
+      doc.attrs.conflictAction = { conflictId: originalConflict.attrs.conflictId, unresolved: true }
+
+      view.dispatch(tr.replaceRangeWith(pos, pos + node.nodeSize, originalConflict))
     })
   }
 

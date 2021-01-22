@@ -95,7 +95,7 @@ export const documentWithConflicts = (markdownParser: MarkdownParser, results: R
   }
 
   return doc.create(
-    { conflictCount },
+    { totalConflictCount: conflictCount },
     Fragment.fromArray(partitions.map(partitionToNode))
   )
 }

@@ -11,9 +11,12 @@ export default class Doc extends LocalNode {
     return {
       content: "block+",
       attrs: {
-        conflictCount: {
-          default: 0
-        }
+        totalConflictCount: {
+          default: undefined
+        },
+        conflictAction: {
+          default: undefined
+        },
       }
     };
   }

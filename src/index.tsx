@@ -74,7 +74,13 @@ export const theme = lightTheme;
 
 export interface EditorAttributes {
   readOnly: boolean | undefined
-  conflictCount: number
+  totalConflictCount: number
+  conflictAction: ConflictAction | undefined
+}
+
+export interface ConflictAction {
+  conflictId: number
+  unresolved: boolean
 }
 
 export type Props = {
@@ -409,10 +415,13 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   };
 
   handleChange = () => {
+    const { attrs } = this.view.state.doc
     this.props.onChange?.(this.value, {
       readOnly: this.props.readOnly,
-      conflictCount: this.view.state.doc.attrs.conflictCount
+      totalConflictCount: attrs.totalConflictCount,
+      conflictAction: attrs.conflictAction
     });
+    attrs.conflictAction = undefined
   };
 
   handleSave = () => {
