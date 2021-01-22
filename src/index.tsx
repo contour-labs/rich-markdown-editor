@@ -4,7 +4,7 @@ import { EditorState, Selection, Plugin } from "prosemirror-state";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
-import { EditorView, Decoration, NodeView } from "prosemirror-view";
+import { EditorView } from "prosemirror-view";
 import { Schema, NodeSpec, MarkSpec, Node } from "prosemirror-model";
 import { inputRules, InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
@@ -65,14 +65,17 @@ import { regexParseConflicts as regexParseConflicts, documentWithConflicts } fro
 import MergeConflict from "./nodes/customRenderNodes/mergeConflict/MergeConflict";
 import MergeSection from "./nodes/customRenderNodes/mergeConflict/MergeSection";
 import Unconflicted from "./nodes/customRenderNodes/mergeConflict/Unconflicted";
-import ReactNode from "./nodes/customRenderNodes/reactNodes/ReactNode";
-import ComponentView from "./lib/ComponentView";
 
 export { schema, parser, serializer } from "./server";
 
 export { default as Extension } from "./lib/Extension";
 
 export const theme = lightTheme;
+
+export interface EditorAttributes {
+  readOnly: boolean | undefined
+  conflictCount: number
+}
 
 export type Props = {
   id?: string;
@@ -88,7 +91,7 @@ export type Props = {
   uploadImage?: (file: File) => Promise<string>;
   onSave?: ({ done: boolean }) => void;
   onCancel?: () => void;
-  onChange: (value: () => string, readonly: boolean | undefined) => void;
+  onChange: (value: () => string, attrs: EditorAttributes) => void;
   onImageUploadStart?: () => void;
   onImageUploadStop?: () => void;
   onCreateLink?: (title: string) => Promise<string>;
@@ -406,12 +409,10 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
   };
 
   handleChange = () => {
-    if (!this.view.state.doc.attrs.conflictCount) {
-      console.log(this.value())
-    }
-    if (this.props.onChange) {
-      this.props.onChange(this.value, this.props.readOnly);
-    }
+    this.props.onChange?.(this.value, {
+      readOnly: this.props.readOnly,
+      conflictCount: this.view.state.doc.attrs.conflictCount
+    });
   };
 
   handleSave = () => {
