@@ -171,13 +171,6 @@ class MergeSection extends NodeViewNode {
     throw new Error("Should never allow the user to perform actions that serialize the state when there are unresolved merge conflicts in the UI")
   }
 
-  private advanceToNextConflict = (): void => {
-    const matches = /^#conflict([0-9])+$/g.exec(window.location.hash)
-    if (matches) {
-      window.location.hash = `#conflict${+matches[1] + 1}`
-    }
-  }
-
 }
 
 export default MergeSection
