@@ -77,7 +77,7 @@ export const light = {
 
 export const dark = {
   ...base,
-  background: '#3F3F46',
+  background: '#2e2e32',
   text: colors.almostWhite,
   code: colors.almostWhite,
   cursor: colors.white,
