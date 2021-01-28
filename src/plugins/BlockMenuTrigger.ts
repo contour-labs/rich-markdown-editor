@@ -1,7 +1,7 @@
-import { Plugin } from "prosemirror-state";
 import { InputRule } from "prosemirror-inputrules";
-import { Decoration, DecorationSet } from "prosemirror-view";
+import { Plugin } from "prosemirror-state";
 import { findParentNode } from "prosemirror-utils";
+import { Decoration, DecorationSet } from "prosemirror-view";
 import Extension from "../lib/Extension";
 
 const MAX_MATCH = 500;
@@ -100,18 +100,6 @@ export default class BlockMenuTrigger extends Extension {
 
             if (isTopLevel) {
               if (isEmpty) {
-                decorations.push(
-                  Decoration.widget(parent.pos, () => {
-                    const icon = document.createElement("button");
-                    icon.type = "button";
-                    icon.className = "block-menu-trigger";
-                    icon.innerText = "+";
-                    icon.addEventListener("click", () => {
-                      this.options.onOpen("");
-                    });
-                    return icon;
-                  })
-                );
 
                 decorations.push(
                   Decoration.node(
@@ -119,7 +107,7 @@ export default class BlockMenuTrigger extends Extension {
                     parent.pos + parent.node.nodeSize,
                     {
                       class: "placeholder",
-                      "data-empty-text": "Type '/' to insert…",
+                      "data-empty-text": "Type / to add blocks…",
                     }
                   )
                 );

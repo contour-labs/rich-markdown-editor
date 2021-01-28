@@ -1,50 +1,26 @@
 /* global window File Promise */
-import * as React from "react";
-import { EditorState, Selection, Plugin } from "prosemirror-state";
+import { baseKeymap } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
-import { MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
-import { EditorView } from "prosemirror-view";
-import { Schema, NodeSpec, MarkSpec, Node } from "prosemirror-model";
-import { inputRules, InputRule } from "prosemirror-inputrules";
+import { InputRule, inputRules } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
-import { baseKeymap } from "prosemirror-commands";
+import { MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
+import { MarkSpec, Node, NodeSpec, Schema } from "prosemirror-model";
+import { EditorState, Plugin, Selection } from "prosemirror-state";
 import { selectColumn, selectRow, selectTable } from "prosemirror-utils";
+import { EditorView } from "prosemirror-view";
+import * as React from "react";
 import styled, { ThemeProvider } from "styled-components";
-import { light as lightTheme, dark as darkTheme } from "./theme";
+import BlockMenu from "./components/BlockMenu";
 import Flex from "./components/Flex";
 import { SearchResult } from "./components/LinkEditor";
-import { EmbedDescriptor } from "./types";
-import SelectionToolbar from "./components/SelectionToolbar";
-import BlockMenu from "./components/BlockMenu";
 import LinkToolbar from "./components/LinkToolbar";
+import SelectionToolbar from "./components/SelectionToolbar";
 import Tooltip from "./components/Tooltip";
 import Extension from "./lib/Extension";
 import ExtensionManager from "./lib/ExtensionManager";
 import headingToSlug from "./lib/headingToSlug";
-
-// nodes
-import NodeViewNode, { NodeViewConstructor } from "./nodes/customRenderNodes/NodeViewNode";
-import Doc from "./nodes/Doc";
-import Text from "./nodes/Text";
-import Blockquote from "./nodes/Blockquote";
-import BulletList from "./nodes/BulletList";
-import CodeBlock from "./nodes/CodeBlock";
-import CodeFence from "./nodes/CodeFence";
-import CheckboxList from "./nodes/CheckboxList";
-import CheckboxItem from "./nodes/CheckboxItem";
-import Embed from "./nodes/customRenderNodes/reactNodes/Embed";
-import Heading from "./nodes/Heading";
-import HorizontalRule from "./nodes/HorizontalRule";
-import Image from "./nodes/customRenderNodes/reactNodes/Image";
-import ListItem from "./nodes/ListItem";
-import OrderedList from "./nodes/OrderedList";
-import Paragraph from "./nodes/Paragraph";
-import Table from "./nodes/Table";
-import TableCell from "./nodes/TableCell";
-import TableHeadCell from "./nodes/TableHeadCell";
-import TableRow from "./nodes/TableRow";
-
+import { documentWithConflicts, regexParseConflicts as regexParseConflicts } from "./lib/mergeConflictCore";
 // marks
 import Bold from "./marks/Bold";
 import Code from "./marks/Code";
@@ -52,23 +28,46 @@ import Highlight from "./marks/Highlight";
 import Italic from "./marks/Italic";
 import Link from "./marks/Link";
 import Strikethrough from "./marks/Strikethrough";
-
-// plugins
-import BlockMenuTrigger from "./plugins/BlockMenuTrigger";
-import History from "./plugins/History";
-import Keys from "./plugins/Keys";
-import Placeholder from "./plugins/Placeholder";
-import SmartText from "./plugins/SmartText";
-import TrailingNode from "./plugins/TrailingNode";
-import MarkdownPaste from "./plugins/MarkdownPaste";
-import { regexParseConflicts as regexParseConflicts, documentWithConflicts } from "./lib/mergeConflictCore";
+import Blockquote from "./nodes/Blockquote";
+import BulletList from "./nodes/BulletList";
+import CheckboxItem from "./nodes/CheckboxItem";
+import CheckboxList from "./nodes/CheckboxList";
+import CodeBlock from "./nodes/CodeBlock";
+import CodeFence from "./nodes/CodeFence";
 import MergeConflict from "./nodes/customRenderNodes/mergeConflict/MergeConflict";
 import MergeSection from "./nodes/customRenderNodes/mergeConflict/MergeSection";
 import Unconflicted from "./nodes/customRenderNodes/mergeConflict/Unconflicted";
+// nodes
+import NodeViewNode, { NodeViewConstructor } from "./nodes/customRenderNodes/NodeViewNode";
+import Embed from "./nodes/customRenderNodes/reactNodes/Embed";
+import Image from "./nodes/customRenderNodes/reactNodes/Image";
+import Doc from "./nodes/Doc";
+import Heading from "./nodes/Heading";
+import HorizontalRule from "./nodes/HorizontalRule";
+import ListItem from "./nodes/ListItem";
+import OrderedList from "./nodes/OrderedList";
+import Paragraph from "./nodes/Paragraph";
+import Table from "./nodes/Table";
+import TableCell from "./nodes/TableCell";
+import TableHeadCell from "./nodes/TableHeadCell";
+import TableRow from "./nodes/TableRow";
+import Text from "./nodes/Text";
+import BlockMenuTrigger from "./plugins/BlockMenuTrigger";
+import History from "./plugins/History";
+import Keys from "./plugins/Keys";
+import MarkdownPaste from "./plugins/MarkdownPaste";
+import Placeholder from "./plugins/Placeholder";
+import SmartText from "./plugins/SmartText";
+import TrailingNode from "./plugins/TrailingNode";
+import { dark as darkTheme, light as lightTheme } from "./theme";
+import { EmbedDescriptor } from "./types";
 
-export { schema, parser, serializer } from "./server";
+
+
 
 export { default as Extension } from "./lib/Extension";
+export { parser, schema, serializer } from "./server";
+
 
 export const theme = lightTheme;
 
