@@ -96,7 +96,7 @@ export const dark = {
   codeBackground: colors.black,
   codeBorder: colors.lightBlack,
   codeString: "#3d8fd1",
-  horizontalRule: colors.lightBlack,
+  horizontalRule: '#A1A1AA',
   imageErrorBackground: "rgba(0, 0, 0, 0.5)",
 };
 
