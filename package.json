@@ -11,6 +11,7 @@
     "start": "webpack-serve --config example/webpack.config.js --content example/dist",
     "build": "tsc",
     "rebuild": "git submodule update --init && yarn install && rm -rf node_modules/react node_modules/react-dom && yarn link && cd ../docs-ui && yarn link \"rich-markdown-editor\" && cd ../rich-markdown-editor",
+    "watch": "watch 'yarn build' ./src",
     "prepublish": "yarn build"
   },
   "dependencies": {
@@ -76,6 +77,7 @@
     "react-dom": "^16.8.6",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.2.1",
+    "watch": "^1.0.2",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3",
     "webpack-serve": "^2.0.3"
