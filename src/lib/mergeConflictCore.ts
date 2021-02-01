@@ -30,7 +30,7 @@ interface RegexParseResults {
 export const regexParseConflicts = (
   fileContents: string
 ): RegexParseResults | false => {
-  const conflictSeeker = /<<<<<<< HEAD\n([\s\S]+?(?=\n=======))\n=======\n([\s\S]+?(?=\n>>>>>>> [a-z0-9]+\n))\n>>>>>>> ([a-z0-9]+\n)/g
+  const conflictSeeker = /<<<<<<< HEAD\n([\s\S]+?(?=\n=======))\n=======\n([\s\S]+?(?=\n>>>>>>> [a-z0-9]+\n))\n>>>>>>> ([a-z0-9]+)\n/g
   const partitions: (MergeConflict | string)[] = []
   let matches: RegExpExecArray | null
   let conflictCount = 0
