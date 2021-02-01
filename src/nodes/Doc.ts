@@ -8,6 +8,14 @@ export default class Doc extends Node {
   get schema() {
     return {
       content: "block+",
+      attrs: {
+        totalConflictCount: {
+          default: undefined
+        },
+        conflictAction: {
+          default: undefined
+        }
+      }
     };
   }
 }
