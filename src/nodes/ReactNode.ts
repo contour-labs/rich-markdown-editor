@@ -5,6 +5,7 @@ export default abstract class ReactNode extends Node {
     node,
     isSelected,
     isEditable,
-    innerRef,
+    theme,
+    getPos,
   }): React.ReactElement;
 }

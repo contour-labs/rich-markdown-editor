@@ -1,7 +1,7 @@
 import * as React from "react";
-import Node from "./Node";
+import ReactNode from "./ReactNode";
 
-export default class Embed extends Node {
+export default class Embed extends ReactNode {
   get name() {
     return "embed";
   }
