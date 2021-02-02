@@ -7,7 +7,7 @@ import styled from "styled-components";
 import insertFiles from "../commands/insertFiles";
 import getDataTransferFiles from "../lib/getDataTransferFiles";
 import uploadPlaceholderPlugin from "../lib/uploadPlaceholder";
-import Node from "./Node";
+import ReactNode from "./ReactNode";
 
 /**
  * Matches following attributes in Markdown-typed image: [, alt, src, class]
@@ -97,7 +97,7 @@ const getLayoutAndTitle = tokenTitle => {
   }
 };
 
-export default class Image extends Node {
+export default class Image extends ReactNode {
   get name() {
     return "image";
   }
