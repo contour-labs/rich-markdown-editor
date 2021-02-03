@@ -1,91 +1,91 @@
 /* global window File Promise */
-import * as React from 'react'
 import memoize from 'lodash/memoize'
-import { EditorState, Selection, Plugin } from 'prosemirror-state'
+import { baseKeymap } from 'prosemirror-commands'
 import { dropCursor } from 'prosemirror-dropcursor'
 import { gapCursor } from 'prosemirror-gapcursor'
-import { MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown'
-import { EditorView } from 'prosemirror-view'
-import {
-  Schema,
-  NodeSpec,
-  MarkSpec,
-  Slice,
-  Node as ProsemirrorNode,
-} from 'prosemirror-model'
-import { inputRules, InputRule } from 'prosemirror-inputrules'
+import { InputRule, inputRules } from 'prosemirror-inputrules'
 import { keymap } from 'prosemirror-keymap'
-import { baseKeymap } from 'prosemirror-commands'
+import { MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown'
+import {
+  MarkSpec,
+
+  Node as ProsemirrorNode, NodeSpec, Schema,
+
+
+  Slice
+} from 'prosemirror-model'
+import { EditorState, Plugin, Selection } from 'prosemirror-state'
 import { selectColumn, selectRow, selectTable } from 'prosemirror-utils'
+import { EditorView } from 'prosemirror-view'
+import * as React from 'react'
 import styled, { ThemeProvider } from 'styled-components'
-import { light as lightTheme, dark as darkTheme } from './theme'
-import baseDictionary from './dictionary'
+import BlockMenu from './components/BlockMenu'
 import Flex from './components/Flex'
 import { SearchResult } from './components/LinkEditor'
-import { EmbedDescriptor, ToastType } from './types'
-import SelectionToolbar from './components/SelectionToolbar'
-import BlockMenu from './components/BlockMenu'
 import LinkToolbar from './components/LinkToolbar'
+import SelectionToolbar from './components/SelectionToolbar'
 import Tooltip from './components/Tooltip'
+import baseDictionary from './dictionary'
+import ComponentView from './lib/ComponentView'
 import Extension from './lib/Extension'
 import ExtensionManager from './lib/ExtensionManager'
-import ComponentView from './lib/ComponentView'
 import headingToSlug from './lib/headingToSlug'
-
-// nodes
-import ReactNode from './nodes/ReactNode'
-import Doc from './nodes/Doc'
-import Text from './nodes/Text'
-import Blockquote from './nodes/Blockquote'
-import BulletList from './nodes/BulletList'
-import CodeBlock from './nodes/CodeBlock'
-import CodeFence from './nodes/CodeFence'
-import CheckboxList from './nodes/CheckboxList'
-import CheckboxItem from './nodes/CheckboxItem'
-import Embed from './nodes/Embed'
-import HardBreak from './nodes/HardBreak'
-import Heading from './nodes/Heading'
-import HorizontalRule from './nodes/HorizontalRule'
-import Image from './nodes/Image'
-import ListItem from './nodes/ListItem'
-import Notice from './nodes/Notice'
-import OrderedList from './nodes/OrderedList'
-import Paragraph from './nodes/Paragraph'
-import Table from './nodes/Table'
-import TableCell from './nodes/TableCell'
-import TableHeadCell from './nodes/TableHeadCell'
-import TableRow from './nodes/TableRow'
-
+import {
+  documentWithConflicts, regexParseConflicts
+} from './lib/mergeConflictCore'
 // marks
 import Bold from './marks/Bold'
 import Code from './marks/Code'
 import Highlight from './marks/Highlight'
 import Italic from './marks/Italic'
 import Link from './marks/Link'
-import Strikethrough from './marks/Strikethrough'
 import TemplatePlaceholder from './marks/Placeholder'
+import Strikethrough from './marks/Strikethrough'
 import Underline from './marks/Underline'
-
+import Blockquote from './nodes/Blockquote'
+import BulletList from './nodes/BulletList'
+import CheckboxItem from './nodes/CheckboxItem'
+import CheckboxList from './nodes/CheckboxList'
+import CodeBlock from './nodes/CodeBlock'
+import CodeFence from './nodes/CodeFence'
+import Doc from './nodes/Doc'
+import Embed from './nodes/Embed'
+import HardBreak from './nodes/HardBreak'
+import Heading from './nodes/Heading'
+import HorizontalRule from './nodes/HorizontalRule'
+import Image from './nodes/Image'
+import ListItem from './nodes/ListItem'
+import MergeConflict from './nodes/MergeConflict'
+import MergeSection from './nodes/MergeSection'
+import NodeViewNode, { NodeViewConstructor } from './nodes/NodeViewNode'
+import Notice from './nodes/Notice'
+import OrderedList from './nodes/OrderedList'
+import Paragraph from './nodes/Paragraph'
+// nodes
+import ReactNode from './nodes/ReactNode'
+import Table from './nodes/Table'
+import TableCell from './nodes/TableCell'
+import TableHeadCell from './nodes/TableHeadCell'
+import TableRow from './nodes/TableRow'
+import Text from './nodes/Text'
+import Unconflicted from './nodes/Unconflicted'
 // plugins
 import BlockMenuTrigger from './plugins/BlockMenuTrigger'
 import History from './plugins/History'
 import Keys from './plugins/Keys'
+import MarkdownPaste from './plugins/MarkdownPaste'
 import Placeholder from './plugins/Placeholder'
 import SmartText from './plugins/SmartText'
 import TrailingNode from './plugins/TrailingNode'
-import MarkdownPaste from './plugins/MarkdownPaste'
-import NodeViewNode, { NodeViewConstructor } from './nodes/NodeViewNode'
-import MergeConflict from './nodes/MergeConflict'
-import MergeSection from './nodes/MergeSection'
-import Unconflicted from './nodes/Unconflicted'
-import {
-  regexParseConflicts,
-  documentWithConflicts,
-} from './lib/mergeConflictCore'
+import { dark as darkTheme, light as lightTheme } from './theme'
+import { EmbedDescriptor, ToastType } from './types'
 
-export { schema, parser, serializer } from './server'
+
+
 
 export { default as Extension } from './lib/Extension'
+export { parser, schema, serializer } from './server'
+
 
 export const theme = lightTheme
 
