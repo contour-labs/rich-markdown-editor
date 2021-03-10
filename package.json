@@ -40,7 +40,10 @@
     "slugify": "^1.4.0",
     "smooth-scroll-into-view-if-needed": "^1.1.27",
     "styled-components": "^5.0.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "y-prosemirror": "^1.0.7",
+    "y-webrtc": "^10.1.8",
+    "yjs": "^13.5.1"
   },
   "peerDependencies": {
     "react": "^16.8.6",

@@ -53,6 +53,7 @@ import TableHeadCell from "./nodes/TableHeadCell";
 import TableRow from "./nodes/TableRow";
 import Text from "./nodes/Text";
 import BlockMenuTrigger from "./plugins/BlockMenuTrigger";
+import Collab from "./plugins/Collab";
 import History from "./plugins/History";
 import Keys from "./plugins/Keys";
 import MarkdownPaste from "./plugins/MarkdownPaste";
@@ -275,6 +276,7 @@ class RichMarkdownEditor extends React.PureComponent<Props, State> {
         new MergeConflict(),
         new MergeSection(),
         new Unconflicted(),
+        new Collab(),
         ...this.props.extensions,
       ] as Extension[],
       this
