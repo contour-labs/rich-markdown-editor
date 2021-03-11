@@ -8,7 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "tsc --noEmit && eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
-    "start": "webpack-serve --config example/webpack.config.js --content example/dist",
+    "start": "webpack-serve --config example/webpack.config.js --content example/dist --port 3001",
     "build": "tsc",
     "rebuild": "git submodule update --init && yarn install && rm -rf node_modules/react node_modules/react-dom && yarn link && cd ../docs-ui && yarn link \"rich-markdown-editor\" && cd ../rich-markdown-editor",
     "watch": "watch 'yarn build' ./src",
