@@ -4,13 +4,12 @@ import ReactDOM from "react-dom";
 import Editor from "../../src";
 
 const element = document.getElementById("main");
-const savedText = localStorage.getItem("saved");
 const exampleText = `
 # Welcome
 
 This is example content. It is persisted between reloads in localStorage.
 `;
-const defaultValue = savedText || exampleText;
+const defaultValue = exampleText;
 
 const docSearchResults = [
   {
@@ -66,11 +65,11 @@ class Example extends React.Component {
   };
 
   handleUpdateValue = () => {
-    const existing = localStorage.getItem("saved") || "";
-    const value = `${existing}\n\nedit!`;
-    localStorage.setItem("saved", value);
+    // const existing = localStorage.getItem("saved") || "";
+    // const value = `${existing}\n\nedit!`;
+    // localStorage.setItem("saved", value);
 
-    this.setState({ value });
+    // this.setState({ value });
   };
 
   handleChange = debounce(value => {
@@ -103,7 +102,7 @@ class Example extends React.Component {
           id="example"
           readOnly={this.state.readOnly}
           value={this.state.value}
-          defaultValue={defaultValue}
+          defaultValue={''}
           onSave={options => console.log("Save triggered", options)}
           onCancel={() => console.log("Cancel triggered")}
           onChange={this.handleChange}
